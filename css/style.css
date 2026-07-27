@@ -33,4 +33,4 @@ header { background: #fff; padding: 20px 0; border-bottom: 1px solid #eee; posit
     box-shadow: 0 10px 30px rgba(0,0,0,0.1); 
 }
 .about-image img:hover { transform: scale(1.05); } /* 마우스 올리면 커지는 동적 효과 */
-.about-text h2 { margin-bottom: 20px; }
+.about-text h2 { margin-bottom: 20px; }  
