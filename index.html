@@ -2,55 +2,154 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>재경닷컴 - 물류 혁신 솔루션</title>
-    <link rel="stylesheet" href="css/style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>재경닷컴 | 글로벌 물류 DX 파트너</title>
+    <!-- 폰트: Pretendard -->
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css" />
+    <link rel="stylesheet" href="./css/style.css">
 </head>
 <body>
+    <!-- Top Notice Bar -->
+    <div class="top-notice">
+        <p>🚀 뷰티 브랜드 등 3PL 체크리스트 <a href="#">다운받기</a></p>
+    </div>
 
-    <header>
-        <div class="container nav-bar">
-            <div class="logo"><strong>재경닷컴</strong></div>
-            <nav class="main-nav">
+    <!-- Header -->
+    <header id="header">
+        <div class="header-inner">
+            <h1 class="logo"><a href="#">재경닷컴</a></h1>
+            <nav class="gnb">
                 <ul>
-                    <li><a href="#">회사소개</a></li>
-                    <li><a href="#">물류 솔루션</a></li>
-                    <li><a href="#">고객센터</a></li>
-                    <li class="groupware-item">
-                        <a href="#" onclick="alert('그룹웨어 로그인 페이지로 이동합니다.'); return false;">⚙️</a>
-                    </li>
+                    <li><a href="#">재경닷컴 소개</a></li>
+                    <li><a href="#">서비스</a></li>
+                    <li><a href="#">요금</a></li>
+                    <li><a href="#">얼라이언스</a></li>
+                    <li><a href="#">블로그</a></li>
+                    <li><a href="#">회사</a></li>
+                    <li><a href="#">물류 자동화 플랫폼</a></li>
                 </ul>
             </nav>
+            <div class="header-util">
+                <div class="lang-wrap">
+                    <a href="#" class="active">KOR</a> | <a href="#">ENG</a> | <a href="#">JPN</a>
+                </div>
+                <a href="#" class="btn-contact">문의하기</a>
+            </div>
+            <!-- 모바일 햄버거 버튼 -->
+            <button class="mobile-menu-btn"><span></span><span></span><span></span></button>
         </div>
     </header>
 
-    <section class="hero">
-        <div class="container hero-content">
-            <h1 class="hero-title">복잡한 물류, <br><span>재경닷컴</span>이 스마트하게 해결합니다.</h1>
-            <p class="hero-subtitle">데이터 기반의 최적화된 물류 시스템과 효율적인 그룹웨어 솔루션으로 <br>귀사의 비즈니스 성장을 가속화합니다.</p>
-            <div class="cta-buttons">
-                <a href="#" class="btn-3d">솔루션 문의하기</a>
-                <a href="#" class="btn-3d secondary">회사 소개서 다운로드</a>
+    <!-- Main Visual (Hero Section) -->
+    <section class="hero-section">
+        <div class="video-background">
+            <!-- 영상 교체 포인트: src 속성에 실제 영상 경로를 넣어주세요 -->
+            <video autoplay loop muted playsinline>
+                <source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4">
+            </video>
+            <div class="overlay"></div>
+        </div>
+        <div class="hero-content">
+            <span class="badge">글로벌 물류 DX 파트너</span>
+            <h2>Logistics Simplified.<br>Success Delivered</h2>
+            <p>쉽고 빠른 물류, 성공의 문을 엽니다.<br>재경닷컴은 신선풀필먼트부터 화물운송, 보관, IT컨설팅까지 유통에 필요한 종합 물류 서비스를 스마트하게 제공합니다.</p>
+        </div>
+    </section>
+
+    <!-- 고정형 광고 영역 (레이아웃 흐트러짐 방지) -->
+    <section class="ad-section">
+        <div class="inner">
+            <!-- 광고 코드가 들어갈 자리입니다. CSS로 높이를 고정하여 CLS 현상을 방지합니다. -->
+            <div class="ad-container" id="ad-banner-1">
+                <!-- 광고 스크립트 삽입 -->
+                <p style="color:#999; text-align:center; line-height:90px;">[ 구글 애드센스 등 광고 코드 삽입 영역 (PC 728x90 / Mobile 320x50) ]</p>
             </div>
         </div>
     </section>
 
-    <section class="about container">
-        <div class="about-flex">
-            <div class="about-image">
-                <!-- 이미지 영역 -->
-                <img src="https://picsum.photos/500/350" alt="물류 솔루션">
+    <!-- Core Services Section -->
+    <section class="services-section">
+        <div class="inner">
+            <div class="section-title">
+                <h2>비즈니스 성장과 성공을 위해<br>글로벌 통합 물류 서비스를 완벽히 수행합니다</h2>
             </div>
-            <div class="about-text">
-                <h2>신뢰할 수 있는 물류 파트너</h2>
-                <p>재경닷컴은 지난 10년간 축적된 물류 데이터 노하우를 바탕으로, 불필요한 비용은 줄이고 배송 속도는 높이는 혁신적인 관리 시스템을 제공합니다. 이제는 그룹웨어와의 완벽한 통합으로, 창고 관리부터 사내 결재까지 한 번에 관리하세요.</p>
+            <div class="service-grid">
+                <!-- 서비스 1 -->
+                <div class="service-card">
+                    <div class="icon-wrap"><img src="https://cdn-icons-png.flaticon.com/512/2933/2933994.png" alt="신선풀필먼트"></div>
+                    <h3>신선풀필먼트</h3>
+                    <a href="#" class="btn-arrow">→</a>
+                </div>
+                <!-- 서비스 2 -->
+                <div class="service-card">
+                    <div class="icon-wrap"><img src="https://cdn-icons-png.flaticon.com/512/2769/2769339.png" alt="화물통합 운송"></div>
+                    <h3>화물통합 운송</h3>
+                    <a href="#" class="btn-arrow">→</a>
+                </div>
+                <!-- 서비스 3 -->
+                <div class="service-card">
+                    <div class="icon-wrap"><img src="https://cdn-icons-png.flaticon.com/512/2822/2822002.png" alt="보관 솔루션"></div>
+                    <h3>보관 솔루션</h3>
+                    <a href="#" class="btn-arrow">→</a>
+                </div>
+                <!-- 서비스 4 -->
+                <div class="service-card">
+                    <div class="icon-wrap"><img src="https://cdn-icons-png.flaticon.com/512/1055/1055644.png" alt="물류 IT 솔루션 및 컨설팅"></div>
+                    <h3>물류 IT 및 컨설팅</h3>
+                    <a href="#" class="btn-arrow">→</a>
+                </div>
+                <!-- 추가 서비스들... -->
+                <div class="service-card">
+                    <div class="icon-wrap"><img src="https://cdn-icons-png.flaticon.com/512/3063/3063822.png" alt="이커머스 풀필먼트"></div>
+                    <h3>이커머스 풀필먼트</h3>
+                    <a href="#" class="btn-arrow">→</a>
+                </div>
+                <div class="service-card">
+                    <div class="icon-wrap"><img src="https://cdn-icons-png.flaticon.com/512/6124/6124997.png" alt="크로스보더 풀필먼트"></div>
+                    <h3>크로스보더 물류</h3>
+                    <a href="#" class="btn-arrow">→</a>
+                </div>
             </div>
         </div>
     </section>
 
-    <footer> 
-        <p>© 2026 재경닷컴. All rights reserved.</p>
+    <!-- Floating Quick Consultation -->
+    <div class="floating-contact">
+        <button class="btn-quick-consult">
+            <span class="txt">물류전문가 FD<br><strong>빠른 상담</strong></span>
+            <span class="icon">🎧</span>
+        </button>
+    </div>
+
+    <!-- Footer -->
+    <footer id="footer">
+        <div class="inner">
+            <div class="footer-top">
+                <h2 class="footer-logo">재경닷컴</h2>
+                <div class="footer-links">
+                    <dl>
+                        <dt>서비스</dt>
+                        <dd><a href="#">신선풀필먼트</a></dd>
+                        <dd><a href="#">화물통합 운송</a></dd>
+                        <dd><a href="#">보관 솔루션</a></dd>
+                        <dd><a href="#">물류 컨설팅</a></dd>
+                    </dl>
+                    <dl>
+                        <dt>고객지원</dt>
+                        <dd><a href="#">공지사항</a></dd>
+                        <dd><a href="#">FAQ</a></dd>
+                        <dd><a href="#">문의하기</a></dd>
+                    </dl>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>재경닷컴 | 대표이사 : 염달성 | 사업자등록번호 : 000-00-00000 | 서울시 강남구 테헤란로 000</p>
+                <p>고객센터 1566-0000 | support@jaekyung.com</p>
+                <p class="copyright">© 2026 Jaekyung.com All Rights Reserved</p>
+            </div>
+        </div>
     </footer>
 
+    <script src="./js/main.js"></script>
 </body>
 </html>
