@@ -6,26 +6,34 @@ document.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('scroll', () => {
         if (window.scrollY > 10) {
             header.classList.add('scrolled');
-            // 최상단 띠배너가 안 보일 때 헤더를 최상단으로 올림
             header.style.top = '0'; 
         } else {
             header.classList.remove('scrolled');
-            // 스크롤이 맨 위면 다시 띠배너 아래로 위치
             if(topNotice) {
                 header.style.top = topNotice.offsetHeight + 'px';
             }
         }
     });
 
-    // 초기 로드시 헤더 위치 세팅
     if(window.scrollY <= 10 && topNotice) {
         header.style.top = topNotice.offsetHeight + 'px';
     }
 
-    // 모바일 햄버거 메뉴 클릭 이벤트 (기본 틀)
+    // 모바일 햄버거 메뉴 펼침/접힘 토글 로직
     const mobileBtn = document.querySelector('.mobile-menu-btn');
-    mobileBtn.addEventListener('click', () => {
-        alert('모바일 메뉴 오픈 애니메이션을 여기에 연결합니다.');
-        // 모바일 메뉴 사이드바 로직 추가...
-    });
+    const gnb = document.querySelector('.gnb');
+    
+    if(mobileBtn && gnb) {
+        mobileBtn.addEventListener('click', () => {
+            // .active 클래스를 껐다 켰다 하면서 메뉴를 엽니다
+            gnb.classList.toggle('active');
+            
+            // 모바일 메뉴가 열렸을 때 헤더 배경을 강제로 하얗게 만듦 (가독성 확보)
+            if(gnb.classList.contains('active')) {
+                header.classList.add('scrolled');
+            } else if (window.scrollY <= 10) {
+                header.classList.remove('scrolled');
+            }
+        });
+    }
 });
