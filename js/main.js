@@ -56,7 +56,9 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     const sections = [...navigationLinks]
-        .map((link) => document.querySelector(link.getAttribute('href')))
+        .map((link) => link.getAttribute('href'))
+        .filter((href) => href?.startsWith('#'))
+        .map((href) => document.querySelector(href))
         .filter(Boolean);
 
     if ('IntersectionObserver' in window && sections.length) {
