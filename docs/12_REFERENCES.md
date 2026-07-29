@@ -20,6 +20,7 @@
 | Applied | 승인된 방식으로 실제 사이트에 적용됨 |
 | Reference Only | 시각 참고에만 사용하고 실제 파일은 사용하지 않음 |
 | Blocked | 권리 또는 기술 문제로 참고·사용할 수 없음 |
+| Deprecated | 이전에 적용했으나 더 이상 사용하지 않음 |
 
 ## 3. 참고 자료 목록
 
@@ -27,7 +28,7 @@
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | `REF-VID-HOME-HERO-001` | `AST-VID-HOME-HERO-001` | `PAGE-HOME` | `SEC-HOME-HERO` | 영상 자체 | 실제 배경 영상 | PC·태블릿·모바일 | 상업적 사용 가능 | Applied |
 | `REF-IMG-ABOUT-CEO-001` | `AST-IMG-ABOUT-CEO-001` | `PAGE-HOME` | `SEC-ABOUT-GREETING` | 이미지 전체 | 실제 소개 이미지 | PC·태블릿·모바일 | 상업적 사용 가능 | Applied |
-| `REF-IMG-KAKAO-CTA-001` | `AST-IMG-KAKAO-CTA-001` | `PAGE-HOME`, `PAGE-PRIVACY` | 카카오 상담 CTA | 이미지 전체·색상 | 실제 CTA 식별 이미지 | PC·태블릿·모바일 | 사용자 제공·상표 조건 미확인 | Applied |
+| `REF-IMG-KAKAO-CTA-001` | `AST-IMG-KAKAO-CTA-001` | `PAGE-HOME`, `PAGE-PRIVACY` | 이전 카카오 상담 CTA | 이미지 전체·색상 | 적용 종료·이력 보관 | 해당 없음 | 사용자 제공·상표 조건 미확인 | Deprecated |
 
 ## 4. 참고 자료 상세
 
@@ -157,14 +158,14 @@
 #### 연결 정보
 
 - 연결 자산: [`AST-IMG-KAKAO-CTA-001`](11_ASSET_MANIFEST.md#ast-img-kakao-cta-001)
-- 연결 변경: `CHG-CONTACT-002`
-- 파일 경로: `public/images/kakao-talk-consultation.png`
-- 대상 Page: 메인 페이지와 개인정보처리방침 페이지
-- 대상 Section: PC 헤더, 모바일 메뉴, 메인 Hero, 하단 상담 CTA
+- 연결 변경: `CHG-CONTACT-002` — `CHG-CONTACT-003`으로 대체
+- 파일 경로: 삭제됨 — 기존 `public/images/kakao-talk-consultation.png`
+- 대상 Page: 적용 종료 — 과거 메인 페이지와 개인정보처리방침 페이지
+- 대상 Section: 적용 종료 — 과거 PC 헤더, 모바일 메뉴, 메인 Hero, 하단 상담 CTA
 
 #### 참고 및 적용 목적
 
-- 사용 구분: 참고 전용이 아닌 실제 사이트 CTA 이미지
+- 사용 구분: 이전 실제 사이트 CTA 이미지, 현재 사용하지 않음
 - 핵심 적용: 노란색 TALK 이미지를 카카오톡 상담 링크 안에 자연스럽게 축소 배치
 - 배치 원칙: 버튼 문구보다 이미지가 과도하게 강조되지 않도록 보조 아이콘 크기로 사용
 - 리사이징 원칙: 3:2 원본 비율 유지, `object-fit: cover`, 파일 변환 없이 중앙 말풍선을 CSS로 1.65배 확대해 버튼 컨테이너 안에 표시
@@ -174,13 +175,15 @@
 
 #### 적용 상태
 
-- 요구사항 상태: Approved
+- 요구사항 상태: Deprecated — `CHG-CONTACT-003`으로 대체
 - 권리 확인 상태: 사용자 제공 및 적용 지시, 카카오 상표 사용 조건 `[미정]`
-- 코드 적용 상태: Applied
-- 적용 파일: `index.html`, `privacy/index.html`, `css/style.css`
+- 코드 적용 상태: Not Applied — HTML·CSS 참조 제거
+- 적용 파일: 없음 — 과거 `index.html`, `privacy/index.html`, `css/style.css`
 - 원본 변경: 하지 않음
 - 파일 최적화: 하지 않음
-- 이미지 보관 상태: `public/images/`에 복사 완료
+- 이미지 보관 상태: 공개 자산에서 삭제, Git 이력에서 복구 가능
+- 적용 종료 사유: 사용자가 이미지 문제를 확인하여 CTA 이미지 제거를 요청함
+- 현재 CTA 기준: 이미지 없이 `빠른 상담하기` 문구와 원형 화살표를 사용하고 기존 카카오톡 채널 링크를 유지
 
 ## 5. 미등록 참고 이미지
 
