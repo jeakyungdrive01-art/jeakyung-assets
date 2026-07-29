@@ -1,12 +1,18 @@
 import { flushSync } from 'react-dom';
 import { createRoot } from 'react-dom/client';
 
+import CeoGreeting from '../components/home/CeoGreeting.jsx';
+import CompanyOverview from '../components/home/CompanyOverview.jsx';
+import CoreValues from '../components/home/CoreValues.jsx';
 import HeroSection from '../components/home/HeroSection.jsx';
 import PublicFooter from '../components/layout/PublicFooter.jsx';
 import PublicHeader from '../components/layout/PublicHeader.jsx';
 
 const header = document.getElementById('header');
 const hero = document.getElementById('top');
+const ceoGreeting = document.querySelector('#about > .content-width > .ceo-greeting');
+const companyOverview = document.querySelector('#about > .content-width > .company-heading');
+const coreValues = document.querySelector('#about > .content-width > .value-grid');
 const footer = document.querySelector('.site-footer');
 
 if (header) {
@@ -17,6 +23,21 @@ if (header) {
 if (hero) {
   const heroRoot = createRoot(hero);
   flushSync(() => heroRoot.render(<HeroSection />));
+}
+
+if (ceoGreeting) {
+  const ceoGreetingRoot = createRoot(ceoGreeting);
+  flushSync(() => ceoGreetingRoot.render(<CeoGreeting />));
+}
+
+if (companyOverview) {
+  const companyOverviewRoot = createRoot(companyOverview);
+  flushSync(() => companyOverviewRoot.render(<CompanyOverview />));
+}
+
+if (coreValues) {
+  const coreValuesRoot = createRoot(coreValues);
+  flushSync(() => coreValuesRoot.render(<CoreValues />));
 }
 
 if (footer) {
