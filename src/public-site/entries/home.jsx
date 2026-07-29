@@ -5,6 +5,7 @@ import CeoGreeting from '../components/home/CeoGreeting.jsx';
 import CompanyOverview from '../components/home/CompanyOverview.jsx';
 import CoreValues from '../components/home/CoreValues.jsx';
 import HeroSection from '../components/home/HeroSection.jsx';
+import LocationSection from '../components/home/LocationSection.jsx';
 import PublicFooter from '../components/layout/PublicFooter.jsx';
 import PublicHeader from '../components/layout/PublicHeader.jsx';
 
@@ -13,6 +14,7 @@ const hero = document.getElementById('top');
 const ceoGreeting = document.querySelector('#about > .content-width > .ceo-greeting');
 const companyOverview = document.querySelector('#about > .content-width > .company-heading');
 const coreValues = document.querySelector('#about > .content-width > .value-grid');
+const location = document.getElementById('location');
 const footer = document.querySelector('.site-footer');
 
 if (header) {
@@ -38,6 +40,11 @@ if (companyOverview) {
 if (coreValues) {
   const coreValuesRoot = createRoot(coreValues);
   flushSync(() => coreValuesRoot.render(<CoreValues />));
+}
+
+if (location) {
+  const locationRoot = createRoot(location);
+  flushSync(() => locationRoot.render(<LocationSection />));
 }
 
 if (footer) {
