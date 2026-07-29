@@ -26,6 +26,7 @@
 | Asset ID | 파일 경로 | 유형 | 용도 | 적용 Page | 적용 Section | 적용 기기 | 권리 상태 | 최적화 상태 | 사용 상태 |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | `AST-VID-HOME-HERO-001` | `public/videos/main_top.mp4` | MP4 영상 | 메인 Hero 배경 | `PAGE-HOME` | `SEC-HOME-HERO` | PC·태블릿·모바일 | 상업적 사용 가능 | 미최적화 | Applied |
+| `AST-IMG-ABOUT-CEO-001` | `public/images/ceo-yeom-dalseong.webp` | WebP 이미지 | 메인 소개 상단 대표 인사말 | `PAGE-HOME` | `SEC-ABOUT-GREETING` | PC·태블릿·모바일 | 상업적 사용 가능 | 원본 유지 | Applied |
 
 ## 4. 자산 상세
 
@@ -60,6 +61,44 @@
 - 사용 승인 상태: Approved
 - 사이트 적용 상태: Applied
 - 최적화 상태: 원본 유지, 별도 최적화 미실시
+- 마지막 확인일: 2026-07-29
+
+### AST-IMG-ABOUT-CEO-001
+
+- 파일명: `ceo-yeom-dalseong.webp`
+- 원본 파일명: `대표이사 염달성.webp`
+- 원본 위치: `/Users/sgk/Downloads/대표이사 염달성.webp`
+- 현재 경로: `public/images/ceo-yeom-dalseong.webp`
+- 미디어 유형: 이미지
+- 파일 형식: WebP
+- MIME 유형: `image/webp`
+- 파일 크기: 40,474바이트(약 39.53KB)
+- 화면 크기: 821×1024px
+- 화면 비율: 약 0.80:1, 세로형
+- 투명도: 없음
+- SHA-256: `66a6bb6f1403a5aa9d299c7d3404d0151b635e8896668fffca1243016d2f819d`
+- 이미지 내용: 인물 사진, `대표이사 염달성` 텍스트 및 서명 이미지가 포함된 세로형 구성
+- 대상 Page: 메인 페이지 `index.html`
+- Page ID: `PAGE-HOME`
+- 대상 Section: 소개 콘텐츠 최상단 대표 인사말
+- Section ID: `SEC-ABOUT-GREETING`
+- 사용 목적: 소개 상단 대표 이미지
+- 적용 기기: PC, 태블릿, 모바일
+- PC 배치: 좌측 이미지
+- 모바일 배치: 상단 이미지
+- 원본 보존: 이름 및 서명 영역을 포함한 전체 이미지 노출 우선
+- 대체 텍스트: `재경닷컴 대표이사 염달성`
+- 제공 방식: 사용자가 로컬 파일로 제공
+- 저작권자: `[미정]`
+- 출처: 사용자 제공, 원저작 출처 `[미정]`
+- 초상권 사용 동의: 가능 — 사용자 확인
+- 상업적 사용: 가능 — 사용자 확인
+- 출처 표기: `[미정]`
+- 사용 승인 상태: Approved
+- 사이트 적용 상태: Applied
+- 최적화 상태: 원본 유지, 별도 최적화 미실시
+- 파일 작업 내역: 원본을 변경하지 않고 표준 영문 파일명으로 `public/images/`에 복사
+- 실제 코드 경로: `index.html`의 `public/images/ceo-yeom-dalseong.webp`
 - 마지막 확인일: 2026-07-29
 
 ## 5. 적용 전후 점검 항목
