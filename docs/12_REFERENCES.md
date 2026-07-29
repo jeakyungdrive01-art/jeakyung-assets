@@ -27,6 +27,7 @@
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | `REF-VID-HOME-HERO-001` | `AST-VID-HOME-HERO-001` | `PAGE-HOME` | `SEC-HOME-HERO` | 영상 자체 | 실제 배경 영상 | PC·태블릿·모바일 | 상업적 사용 가능 | Applied |
 | `REF-IMG-ABOUT-CEO-001` | `AST-IMG-ABOUT-CEO-001` | `PAGE-HOME` | `SEC-ABOUT-GREETING` | 이미지 전체 | 실제 소개 이미지 | PC·태블릿·모바일 | 상업적 사용 가능 | Applied |
+| `REF-IMG-KAKAO-CTA-001` | `AST-IMG-KAKAO-CTA-001` | `PAGE-HOME`, `PAGE-PRIVACY` | 카카오 상담 CTA | 이미지 전체·색상 | 실제 CTA 식별 이미지 | PC·태블릿·모바일 | 사용자 제공·상표 조건 미확인 | Applied |
 
 ## 4. 참고 자료 상세
 
@@ -150,6 +151,36 @@
 - 원본 변경: 하지 않음
 - 파일 최적화: 하지 않음
 - HTML 및 CSS 변경: `index.html`, `css/style.css`에 적용
+
+### REF-IMG-KAKAO-CTA-001
+
+#### 연결 정보
+
+- 연결 자산: [`AST-IMG-KAKAO-CTA-001`](11_ASSET_MANIFEST.md#ast-img-kakao-cta-001)
+- 연결 변경: `CHG-CONTACT-002`
+- 파일 경로: `public/images/kakao-talk-consultation.png`
+- 대상 Page: 메인 페이지와 개인정보처리방침 페이지
+- 대상 Section: PC 헤더, 모바일 메뉴, 메인 Hero, 하단 상담 CTA
+
+#### 참고 및 적용 목적
+
+- 사용 구분: 참고 전용이 아닌 실제 사이트 CTA 이미지
+- 핵심 적용: 노란색 TALK 이미지를 카카오톡 상담 링크 안에 자연스럽게 축소 배치
+- 배치 원칙: 버튼 문구보다 이미지가 과도하게 강조되지 않도록 보조 아이콘 크기로 사용
+- 리사이징 원칙: 3:2 원본 비율 유지, `object-fit: cover`, 파일 변환 없이 중앙 말풍선을 CSS로 1.65배 확대해 버튼 컨테이너 안에 표시
+- 동적 표현: hover와 키보드 focus 시 이미지 기울기·확대, 화살표 이동과 짧은 광택 효과 적용
+- 접근성: 이미지는 빈 대체 텍스트로 처리하고 링크 목적은 실제 텍스트 및 `aria-label`로 제공
+- 모션 접근성: `prefers-reduced-motion` 환경에서는 이동과 광택 효과 제거
+
+#### 적용 상태
+
+- 요구사항 상태: Approved
+- 권리 확인 상태: 사용자 제공 및 적용 지시, 카카오 상표 사용 조건 `[미정]`
+- 코드 적용 상태: Applied
+- 적용 파일: `index.html`, `privacy/index.html`, `css/style.css`
+- 원본 변경: 하지 않음
+- 파일 최적화: 하지 않음
+- 이미지 보관 상태: `public/images/`에 복사 완료
 
 ## 5. 미등록 참고 이미지
 
