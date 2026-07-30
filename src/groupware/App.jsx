@@ -7,6 +7,7 @@ import LoginPage from './pages/auth/LoginPage.jsx';
 import PendingPage from './pages/auth/PendingPage.jsx';
 import ResetPasswordPage from './pages/auth/ResetPasswordPage.jsx';
 import SignupPage from './pages/auth/SignupPage.jsx';
+import UpdatePasswordPage from './pages/auth/UpdatePasswordPage.jsx';
 import AdminPage from './pages/internal/AdminPage.jsx';
 import ApprovalPage from './pages/internal/ApprovalPage.jsx';
 import BoardPage from './pages/internal/BoardPage.jsx';
@@ -18,6 +19,8 @@ import MailPage from './pages/internal/MailPage.jsx';
 import OrganizationPage from './pages/internal/OrganizationPage.jsx';
 import PostDetailPage from './pages/internal/PostDetailPage.jsx';
 import PostWritePage from './pages/internal/PostWritePage.jsx';
+import MembershipStatusPage from './pages/status/MembershipStatusPage.jsx';
+import AdminRoute from './routes/AdminRoute.jsx';
 import ProtectedRoute from './routes/ProtectedRoute.jsx';
 
 export default function App() {
@@ -30,7 +33,11 @@ export default function App() {
             <Route path="login" element={<LoginPage />} />
             <Route path="signup" element={<SignupPage />} />
             <Route path="pending" element={<PendingPage />} />
+            <Route path="rejected" element={<MembershipStatusPage status="rejected" />} />
+            <Route path="locked" element={<MembershipStatusPage status="locked" />} />
+            <Route path="resigned" element={<MembershipStatusPage status="resigned" />} />
             <Route path="reset-password" element={<ResetPasswordPage />} />
+            <Route path="reset-password/update" element={<UpdatePasswordPage />} />
           </Route>
 
           <Route element={<ProtectedRoute />}>
@@ -45,7 +52,9 @@ export default function App() {
               <Route path="approval" element={<ApprovalPage />} />
               <Route path="calendar" element={<CalendarPage />} />
               <Route path="files" element={<FilesPage />} />
-              <Route path="admin" element={<AdminPage />} />
+              <Route element={<AdminRoute />}>
+                <Route path="admin" element={<AdminPage />} />
+              </Route>
             </Route>
           </Route>
 

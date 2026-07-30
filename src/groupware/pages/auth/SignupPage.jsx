@@ -1,28 +1,67 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
 import FormStatus from '../../components/FormStatus.jsx';
 import PasswordField from '../../components/PasswordField.jsx';
-import { FOUNDATION_DEPARTMENTS, FOUNDATION_OPTIONS_NOTICE, FOUNDATION_POSITIONS } from '../../config/foundationOptions.js';
+import SupabaseConfigurationNotice from '../../components/SupabaseConfigurationNotice.jsx';
+import { useAuth } from '../../context/AuthContext.jsx';
+import { getSafeAuthMessage, getSignupOptions } from '../../services/authService.js';
+
+const EMPTY_OPTIONS = { departments: [], positions: [], job_titles: [] };
 
 export default function SignupPage() {
+  const auth = useAuth();
   const navigate = useNavigate();
   const [error, setError] = useState('');
+  const [options, setOptions] = useState(EMPTY_OPTIONS);
+  const [optionsLoading, setOptionsLoading] = useState(auth.configured);
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmit = (event) => {
+  useEffect(() => {
+    if (!auth.configured) return undefined;
+    let active = true;
+    getSignupOptions()
+      .then((data) => {
+        if (active) setOptions({ ...EMPTY_OPTIONS, ...(data ?? {}) });
+      })
+      .catch(() => {
+        if (active) setError('가입 선택 정보를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.');
+      })
+      .finally(() => {
+        if (active) setOptionsLoading(false);
+      });
+    return () => { active = false; };
+  }, [auth.configured]);
+
+  const handleSubmit = async (event) => {
     event.preventDefault();
+    if (submitting) return;
     const form = new FormData(event.currentTarget);
     if (form.get('password') !== form.get('passwordConfirmation')) {
       setError('비밀번호와 비밀번호 확인이 일치하지 않습니다.');
       return;
     }
     setError('');
-    navigate('/pending', {
-      state: {
-        email: form.get('email'),
-        foundationOnly: true,
-      },
-    });
+    setSubmitting(true);
+    try {
+      await auth.signUp({
+        name: String(form.get('name')).trim(),
+        email: String(form.get('email')).trim(),
+        phone: String(form.get('phone')).trim(),
+        password: String(form.get('password')),
+        requestedDepartmentId: String(form.get('requestedDepartmentId')),
+        requestedPositionId: String(form.get('requestedPositionId')),
+        requestedJobTitleId: String(form.get('requestedJobTitleId')),
+      });
+      navigate('/pending', {
+        replace: true,
+        state: { email: form.get('email'), requestSubmitted: true },
+      });
+    } catch (submitError) {
+      setError(getSafeAuthMessage(submitError, '가입 신청을 처리하지 못했습니다. 입력 정보를 확인하고 잠시 후 다시 시도해 주세요.'));
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -33,7 +72,9 @@ export default function SignupPage() {
         <p>신청 정보는 향후 관리자 확인과 승인 후 그룹웨어 계정으로 연결됩니다.</p>
       </div>
 
-      <form className="gw-form" onSubmit={handleSubmit} aria-describedby="signup-status signup-options-notice">
+      {!auth.configured && <SupabaseConfigurationNotice />}
+
+      <form className="gw-form" onSubmit={handleSubmit} aria-describedby="signup-status">
         <div className="gw-form-grid">
           <div className="gw-field">
             <label htmlFor="signup-name">이름</label>
@@ -49,22 +90,32 @@ export default function SignupPage() {
           </div>
           <div className="gw-field">
             <label htmlFor="signup-department">부서</label>
-            <select id="signup-department" name="department" defaultValue="" data-source="foundation-static" required>
-              {FOUNDATION_DEPARTMENTS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+            <select id="signup-department" name="requestedDepartmentId" defaultValue="" required disabled={optionsLoading || !auth.configured}>
+              <option value="">부서를 선택해 주세요</option>
+              {options.departments.map((option) => <option key={option.id} value={option.id}>{option.name}</option>)}
+            </select>
+          </div>
+          <div className="gw-field">
+            <label htmlFor="signup-position">직급</label>
+            <select id="signup-position" name="requestedPositionId" defaultValue="" required disabled={optionsLoading || !auth.configured}>
+              <option value="">직급을 선택해 주세요</option>
+              {options.positions.map((option) => <option key={option.id} value={option.id}>{option.name}</option>)}
             </select>
           </div>
           <div className="gw-field gw-field--full">
-            <label htmlFor="signup-position">직급 또는 직책</label>
-            <select id="signup-position" name="position" defaultValue="" data-source="foundation-static" required>
-              {FOUNDATION_POSITIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+            <label htmlFor="signup-job-title">직책</label>
+            <select id="signup-job-title" name="requestedJobTitleId" defaultValue="" required disabled={optionsLoading || !auth.configured}>
+              <option value="">직책을 선택해 주세요</option>
+              {options.job_titles.map((option) => <option key={option.id} value={option.id}>{option.name}</option>)}
             </select>
           </div>
-          <PasswordField id="signup-password" name="password" label="비밀번호" autoComplete="new-password" hint="향후 보안 정책 확정 후 최소 길이와 조합 규칙을 적용합니다." />
+          <PasswordField id="signup-password" name="password" label="비밀번호" autoComplete="new-password" hint="8자 이상의 안전한 비밀번호를 입력해 주세요." minLength={8} />
           <PasswordField id="signup-password-confirmation" name="passwordConfirmation" label="비밀번호 확인" autoComplete="new-password" />
         </div>
-        <p className="gw-field-hint" id="signup-options-notice">{FOUNDATION_OPTIONS_NOTICE}</p>
         <FormStatus id="signup-status" message={error} tone="error" />
-        <button className="gw-primary-button" type="submit">가입 신청</button>
+        <button className="gw-primary-button" type="submit" disabled={!auth.configured || optionsLoading || submitting}>
+          {submitting ? '가입 신청 중…' : '가입 신청'}
+        </button>
       </form>
 
       <p className="gw-auth-return">이미 승인된 계정이 있나요? <Link to="/login">로그인으로 돌아가기</Link></p>

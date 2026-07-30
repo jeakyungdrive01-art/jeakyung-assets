@@ -1,6 +1,6 @@
 import { useId, useState } from 'react';
 
-export default function PasswordField({ id, label, name, autoComplete, required = true, hint }) {
+export default function PasswordField({ id, label, name, autoComplete, required = true, hint, minLength }) {
   const generatedHintId = useId();
   const [visible, setVisible] = useState(false);
   const hintId = hint ? `${id}-${generatedHintId}` : undefined;
@@ -16,6 +16,7 @@ export default function PasswordField({ id, label, name, autoComplete, required 
           autoComplete={autoComplete}
           aria-describedby={hintId}
           required={required}
+          minLength={minLength}
         />
         <button
           className="gw-password-toggle"

@@ -16,6 +16,7 @@ export default function AppShell() {
   const [collapsed, setCollapsed] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(() => window.matchMedia(MOBILE_QUERY).matches);
+  const [signOutError, setSignOutError] = useState('');
 
   const visibleNavigation = useMemo(
     () => GROUPWARE_NAVIGATION.filter((item) => !item.requiredPermission || auth.permissions.includes(item.requiredPermission)),
@@ -62,6 +63,15 @@ export default function AppShell() {
 
   const sidebarHidden = isMobile && !drawerOpen;
 
+  const handleSignOut = async () => {
+    setSignOutError('');
+    try {
+      await auth.signOut();
+    } catch {
+      setSignOutError('로그아웃하지 못했습니다. 잠시 후 다시 시도해 주세요.');
+    }
+  };
+
   return (
     <div className={`gw-app-shell${collapsed ? ' gw-app-shell--collapsed' : ''}`}>
       <a className="gw-skip-link" href="#groupware-content">본문으로 바로가기</a>
@@ -91,7 +101,7 @@ export default function AppShell() {
           ))}
         </nav>
         <div className="gw-sidebar-footer">
-          <p><strong>연동 준비 단계</strong><span>실제 인증과 데이터는 연결되지 않았습니다.</span></p>
+          <p><strong>{auth.profile?.name ?? '사용자'}</strong><span>{auth.roles.length ? auth.roles.join(' · ') : '역할 확인 중'}</span></p>
           <button className="gw-collapse-button" type="button" onClick={() => setCollapsed((current) => !current)} aria-pressed={collapsed}>
             <span aria-hidden="true">{collapsed ? '→' : '←'}</span>
             <span>{collapsed ? '펼치기' : '사이드바 접기'}</span>
@@ -112,10 +122,11 @@ export default function AppShell() {
           <div className="gw-topbar-tools" aria-label="준비 중인 업무 도구">
             <button type="button" disabled title="검색 기능은 추후 제공됩니다"><span aria-hidden="true">⌕</span><span className="gw-tool-label">검색</span></button>
             <button type="button" disabled title="알림 기능은 추후 제공됩니다"><span aria-hidden="true">♢</span><span className="gw-tool-label">알림</span></button>
-            <button type="button" disabled title="사용자 메뉴는 인증 연동 후 제공됩니다"><span aria-hidden="true">○</span><span className="gw-tool-label">사용자</span></button>
+            <button type="button" onClick={handleSignOut} title="현재 기기에서 로그아웃"><span aria-hidden="true">↪</span><span className="gw-tool-label">로그아웃</span></button>
           </div>
         </header>
         <main className="gw-content" id="groupware-content" tabIndex="-1">
+          {signOutError && <div className="gw-notice gw-notice--warning" role="alert">{signOutError}</div>}
           <Outlet />
         </main>
       </div>

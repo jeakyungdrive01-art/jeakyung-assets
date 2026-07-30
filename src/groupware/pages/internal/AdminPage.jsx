@@ -1,6 +1,48 @@
-import PageScaffold from '../../components/PageScaffold.jsx';
-import { PAGE_MODULES, toSections } from '../../config/pageModules.js';
+import { useCallback, useEffect, useState } from 'react';
+
+import MembershipApprovalPanel from '../../components/admin/MembershipApprovalPanel.jsx';
+import OrganizationManagementPanel from '../../components/admin/OrganizationManagementPanel.jsx';
+import { getOrganizationDirectory } from '../../services/organizationService.js';
+
+const EMPTY_DIRECTORY = { departments: [], positions: [], jobTitles: [], roles: [] };
 
 export default function AdminPage() {
-  return <PageScaffold eyebrow="ADMINISTRATION" title="관리자" description="회원·조직·권한과 시스템 운영을 감사 가능한 절차로 관리합니다." notice="관리 기능은 향후 서버 권한 검증과 Supabase RLS 연결 후에만 활성화됩니다." sections={toSections(PAGE_MODULES.admin)} />;
+  const [directory, setDirectory] = useState(EMPTY_DIRECTORY);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  const loadDirectory = useCallback(async () => {
+    setError('');
+    try {
+      setDirectory(await getOrganizationDirectory());
+    } catch {
+      setError('조직·역할 기준 정보를 불러오지 못했습니다. 관리자 권한과 Supabase 연결을 확인해 주세요.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { loadDirectory(); }, [loadDirectory]);
+
+  return (
+    <article className="gw-page gw-admin-page" aria-labelledby="page-title">
+      <header className="gw-page-header">
+        <div>
+          <span className="gw-eyebrow">ADMINISTRATION</span>
+          <h1 id="page-title">관리자</h1>
+          <p>회원 승인과 조직 기준 변경을 서버 권한 검증과 감사 로그를 거쳐 관리합니다.</p>
+        </div>
+        <span className="gw-phase-badge">G2 인증·회원</span>
+      </header>
+      {error && <div className="gw-notice gw-notice--warning" role="alert">{error}</div>}
+      {loading ? (
+        <p className="gw-empty-state" role="status">관리자 데이터를 불러오고 있습니다.</p>
+      ) : (
+        <>
+          <MembershipApprovalPanel directory={directory} />
+          <OrganizationManagementPanel directory={directory} onReload={loadDirectory} />
+        </>
+      )}
+    </article>
+  );
 }
