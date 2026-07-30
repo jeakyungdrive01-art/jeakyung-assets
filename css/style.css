@@ -620,6 +620,29 @@ p {
     padding: 9px 13px 9px 20px;
 }
 
+.hero-actions .button {
+    gap: 10px;
+    min-width: 220px;
+    min-height: 58px;
+    padding: 9px 13px 9px 20px;
+    line-height: 1.2;
+}
+
+.hero-action-label {
+    flex: 1 1 auto;
+    text-align: left;
+    white-space: nowrap;
+}
+
+.hero-action-symbol {
+    display: grid;
+    place-items: center;
+    flex: 0 0 auto;
+    width: 32px;
+    height: 32px;
+    font-size: 16px;
+}
+
 .hero-index {
     width: 100%;
     max-width: 380px;
@@ -2174,6 +2197,19 @@ p {
         overflow-wrap: break-word;
     }
 
+    .hero-copy h1,
+    .ceo-message h2,
+    .section-heading h2,
+    .audience-copy h2,
+    .statement h2,
+    .faq-heading h2,
+    .contact-copy h2,
+    .policy-hero h1 {
+        word-break: keep-all;
+        overflow-wrap: normal;
+        text-wrap: balance;
+    }
+
     .brand {
         font-size: 20px;
     }
@@ -2295,6 +2331,21 @@ p {
     }
 
     .kakao-cta-arrow {
+        width: 34px;
+        height: 34px;
+    }
+
+    .hero-actions .button {
+        min-height: 56px;
+        padding: 10px 12px 10px 20px;
+    }
+
+    .hero-actions .hero-action-label {
+        font-size: 15px;
+        line-height: 1.2;
+    }
+
+    .hero-actions .hero-action-symbol {
         width: 34px;
         height: 34px;
     }
@@ -2461,7 +2512,10 @@ p {
     }
 
     .statement h2 {
-        font-size: clamp(45px, 13vw, 62px);
+        font-size: clamp(29px, 9.2vw, 52px);
+        letter-spacing: -0.055em;
+        line-height: 1.08;
+        white-space: nowrap;
     }
 
     .statement-decoration {
