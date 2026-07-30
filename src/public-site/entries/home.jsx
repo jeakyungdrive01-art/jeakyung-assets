@@ -1,32 +1,12 @@
 import { flushSync } from 'react-dom';
 import { createRoot } from 'react-dom/client';
 
-import AudienceSection from '../components/home/AudienceSection.jsx';
-import CeoGreeting from '../components/home/CeoGreeting.jsx';
-import CompanyOverview from '../components/home/CompanyOverview.jsx';
-import ContactSection from '../components/home/ContactSection.jsx';
-import CoreValues from '../components/home/CoreValues.jsx';
-import FAQSection from '../components/home/FAQSection.jsx';
-import GuideSection from '../components/home/GuideSection.jsx';
-import HeroSection from '../components/home/HeroSection.jsx';
-import LocationSection from '../components/home/LocationSection.jsx';
-import ServicesSection from '../components/home/ServicesSection.jsx';
-import StatementSection from '../components/home/StatementSection.jsx';
 import PublicFooter from '../components/layout/PublicFooter.jsx';
 import PublicHeader from '../components/layout/PublicHeader.jsx';
+import HomePage from '../pages/HomePage.jsx';
 
 const header = document.getElementById('header');
-const hero = document.getElementById('top');
-const ceoGreeting = document.querySelector('#about > .content-width > .ceo-greeting');
-const companyOverview = document.querySelector('#about > .content-width > .company-heading');
-const coreValues = document.querySelector('#about > .content-width > .value-grid');
-const location = document.getElementById('location');
-const services = document.getElementById('services');
-const audience = document.getElementById('audience');
-const statement = document.querySelector('section.statement');
-const guide = document.getElementById('guide');
-const faq = document.getElementById('faq');
-const contact = document.getElementById('contact');
+const main = document.getElementById('main-content');
 const footer = document.querySelector('.site-footer');
 
 if (header) {
@@ -34,59 +14,9 @@ if (header) {
   flushSync(() => headerRoot.render(<PublicHeader page="home" />));
 }
 
-if (hero) {
-  const heroRoot = createRoot(hero);
-  flushSync(() => heroRoot.render(<HeroSection />));
-}
-
-if (ceoGreeting) {
-  const ceoGreetingRoot = createRoot(ceoGreeting);
-  flushSync(() => ceoGreetingRoot.render(<CeoGreeting />));
-}
-
-if (companyOverview) {
-  const companyOverviewRoot = createRoot(companyOverview);
-  flushSync(() => companyOverviewRoot.render(<CompanyOverview />));
-}
-
-if (coreValues) {
-  const coreValuesRoot = createRoot(coreValues);
-  flushSync(() => coreValuesRoot.render(<CoreValues />));
-}
-
-if (location) {
-  const locationRoot = createRoot(location);
-  flushSync(() => locationRoot.render(<LocationSection />));
-}
-
-if (services) {
-  const servicesRoot = createRoot(services);
-  flushSync(() => servicesRoot.render(<ServicesSection />));
-}
-
-if (audience) {
-  const audienceRoot = createRoot(audience);
-  flushSync(() => audienceRoot.render(<AudienceSection />));
-}
-
-if (statement) {
-  const statementRoot = createRoot(statement);
-  flushSync(() => statementRoot.render(<StatementSection />));
-}
-
-if (guide) {
-  const guideRoot = createRoot(guide);
-  flushSync(() => guideRoot.render(<GuideSection />));
-}
-
-if (faq) {
-  const faqRoot = createRoot(faq);
-  flushSync(() => faqRoot.render(<FAQSection />));
-}
-
-if (contact) {
-  const contactRoot = createRoot(contact);
-  flushSync(() => contactRoot.render(<ContactSection />));
+if (main) {
+  const mainRoot = createRoot(main);
+  flushSync(() => mainRoot.render(<HomePage />));
 }
 
 if (footer) {

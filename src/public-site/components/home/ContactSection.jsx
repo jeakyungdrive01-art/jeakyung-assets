@@ -1,4 +1,4 @@
-export default function ContactSection() {
+export default function ContactSection({ selectedService }) {
   return (
     <div className="content-width contact-card reveal">
       <div className="contact-copy">
@@ -24,7 +24,9 @@ export default function ContactSection() {
           <li><span>03</span> 해결하려는 물류 과제</li>
           <li><span>04</span> 확인하고 싶은 내용</li>
         </ul>
-        <p className="selected-service" aria-live="polite" />
+        <p className="selected-service" aria-live="polite">
+          {selectedService ? `선택한 관심 서비스: ${selectedService}` : ''}
+        </p>
       </div>
     </div>
   );

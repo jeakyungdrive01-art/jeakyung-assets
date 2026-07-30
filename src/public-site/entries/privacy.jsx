@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client';
 
 import PublicFooter from '../components/layout/PublicFooter.jsx';
 import PublicHeader from '../components/layout/PublicHeader.jsx';
-import PrivacyPolicyContent from '../components/privacy/PrivacyPolicyContent.jsx';
+import PrivacyPolicyPage from '../pages/PrivacyPolicyPage.jsx';
 
 const header = document.getElementById('header');
 const main = document.getElementById('main-content');
@@ -16,7 +16,7 @@ if (header) {
 
 if (main) {
   const mainRoot = createRoot(main);
-  flushSync(() => mainRoot.render(<PrivacyPolicyContent />));
+  flushSync(() => mainRoot.render(<PrivacyPolicyPage />));
 }
 
 if (footer) {

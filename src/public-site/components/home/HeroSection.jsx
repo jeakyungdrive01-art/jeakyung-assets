@@ -1,11 +1,32 @@
 import { CONSULTATION_URL } from '../../data/navigation.js';
+import useHeroVideoState from '../../hooks/useHeroVideoState.js';
 import heroVideoUrl from '../../../../public/videos/main_top.mp4';
 
 export default function HeroSection() {
+  const {
+    handleVideoError,
+    isPaused,
+    isUnavailable,
+    videoRef,
+  } = useHeroVideoState();
+  const className = [
+    'hero',
+    isUnavailable ? 'video-unavailable' : '',
+    isPaused ? 'video-paused' : '',
+  ].filter(Boolean).join(' ');
+
   return (
-    <>
+    <section className={className} id="top" aria-labelledby="hero-title">
       <div className="hero-media" aria-hidden="true">
-        <video autoPlay loop muted playsInline preload="metadata">
+        <video
+          ref={videoRef}
+          autoPlay
+          loop
+          muted
+          playsInline
+          preload="metadata"
+          onError={handleVideoError}
+        >
           <source src={heroVideoUrl} type="video/mp4" />
         </video>
         <div className="hero-overlay" />
@@ -48,6 +69,6 @@ export default function HeroSection() {
         <span>Scroll to explore</span>
         <i aria-hidden="true" />
       </a>
-    </>
+    </section>
   );
 }

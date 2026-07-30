@@ -8,6 +8,7 @@ import {
 export default function PublicFooter({ page }) {
   const links = footerLinksByPage[page];
   const isPrivacy = page === 'privacy';
+  const currentYear = new Date().getFullYear();
 
   return (
     <div className="content-width">
@@ -57,7 +58,7 @@ export default function PublicFooter({ page }) {
       </div>
       <div className="footer-bottom">
         <p>본사 062-952-9794 · Fax 062-962-9795</p>
-        <p>© <span id="current-year">2026</span> Jaekyung.com. All rights reserved.</p>
+        <p>© <span id="current-year">{currentYear}</span> Jaekyung.com. All rights reserved.</p>
       </div>
     </div>
   );
