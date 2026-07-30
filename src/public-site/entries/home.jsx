@@ -5,6 +5,7 @@ import AudienceSection from '../components/home/AudienceSection.jsx';
 import CeoGreeting from '../components/home/CeoGreeting.jsx';
 import CompanyOverview from '../components/home/CompanyOverview.jsx';
 import CoreValues from '../components/home/CoreValues.jsx';
+import GuideSection from '../components/home/GuideSection.jsx';
 import HeroSection from '../components/home/HeroSection.jsx';
 import LocationSection from '../components/home/LocationSection.jsx';
 import ServicesSection from '../components/home/ServicesSection.jsx';
@@ -21,6 +22,7 @@ const location = document.getElementById('location');
 const services = document.getElementById('services');
 const audience = document.getElementById('audience');
 const statement = document.querySelector('section.statement');
+const guide = document.getElementById('guide');
 const footer = document.querySelector('.site-footer');
 
 if (header) {
@@ -66,6 +68,11 @@ if (audience) {
 if (statement) {
   const statementRoot = createRoot(statement);
   flushSync(() => statementRoot.render(<StatementSection />));
+}
+
+if (guide) {
+  const guideRoot = createRoot(guide);
+  flushSync(() => guideRoot.render(<GuideSection />));
 }
 
 if (footer) {
