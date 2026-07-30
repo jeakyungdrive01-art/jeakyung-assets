@@ -4,7 +4,7 @@
 
 이 문서는 재경닷컴 웹사이트의 기획, 디자인, 개발, 검수 기준을 정의한다. 웹사이트 개편 및 기능 확장 시 본 문서를 공통 기준으로 사용하며, 실제 사업 정보와 운영 정책이 확정되면 관련 내용을 갱신한다.
 
-현재 프로젝트는 별도 빌드 과정이 없는 HTML, CSS, JavaScript 기반 정적 사이트를 기준으로 한다.
+현재 프로젝트는 Vite + React 다중 페이지 방식의 공개 사이트(`/`, `/privacy/`)와 React Router 기반 그룹웨어 SPA(`/groupware/*`)를 분리해 운영하는 구조를 기준으로 한다.
 
 ## 2. 웹사이트 목적
 
@@ -983,3 +983,31 @@ Change ID 단위로 구현 대기 항목과 완료 이력을 분리한다. 다�
 - 구현 완료일: 2026-07-29
 - 실제 화면의 브라우저·기기별 최종 시각 검수는 배포 전 별도로 진행한다.
 - 완료된 Change ID는 같은 요청을 다시 수행하지 않고 후속 변경이 있을 때 새 Change ID를 발급한다.
+
+## 15. 그룹웨어 G0–G1 기준
+
+### 15.1 목적과 경계
+
+- 그룹웨어는 재경닷컴 임직원 전용 업무 시스템이다.
+- 공개 사이트와 코드·스타일·라우팅 진입점을 분리한다.
+- G0–G1에서는 인증 UI, 보호 경로, App Shell과 내부 페이지 골격까지만 구현한다.
+- Supabase, 실제 회원 데이터, 게시판 CRUD, 전자결재·일정·파일 기능과 메일 연동은 후속 승인 전까지 구현하지 않는다.
+- 새 그룹웨어의 Preview 검수와 운영 전환 승인 전까지 공개 사이트의 `https://jeakyung.quv.kr` 링크를 유지한다.
+
+### 15.2 보안 원칙
+
+- 비로그인 사용자는 내부 페이지와 데이터를 사용할 수 없다.
+- 메뉴를 숨기는 것만으로 권한을 처리하지 않으며 최종 보안은 서버 권한 검증과 Supabase RLS를 사용한다.
+- `service_role` 키, 비밀번호, 토큰과 비밀정보는 브라우저 코드나 저장소에 포함하지 않는다.
+- 관리자, 삭제와 권한 변경은 서버 함수에서 처리하고 감사 로그를 남긴다.
+- G0–G1 보호 경로는 가짜 세션 없이 로그인 화면으로 이동한다.
+
+### 15.3 상세 기준 문서
+
+- 문서 색인: `docs/00_INDEX.md`
+- 반응형: `docs/21_RESPONSIVE_SYSTEM.md`
+- 경로·내비게이션: `docs/22_NAVIGATION_AND_LINKS.md`
+- 페이지 콘텐츠·흐름: `docs/23_PAGE_CONTENT_PLAN.md`, `docs/24_USER_FLOWS.md`
+- 인증·권한: `docs/27_AUTH_AND_MEMBERSHIP.md`, `docs/28_ROLE_AND_PERMISSION_MATRIX.md`
+- 게시판·데이터·보안: `docs/29_BOARD_SYSTEM.md`, `docs/30_DATABASE_SCHEMA.md`, `docs/31_SECURITY_AND_RLS.md`
+- 관리자·메일: `docs/32_ADMIN_SYSTEM.md`, `docs/33_MAIL_INTEGRATION.md`
