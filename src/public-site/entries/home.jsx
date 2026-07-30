@@ -8,6 +8,7 @@ import CoreValues from '../components/home/CoreValues.jsx';
 import HeroSection from '../components/home/HeroSection.jsx';
 import LocationSection from '../components/home/LocationSection.jsx';
 import ServicesSection from '../components/home/ServicesSection.jsx';
+import StatementSection from '../components/home/StatementSection.jsx';
 import PublicFooter from '../components/layout/PublicFooter.jsx';
 import PublicHeader from '../components/layout/PublicHeader.jsx';
 
@@ -19,6 +20,7 @@ const coreValues = document.querySelector('#about > .content-width > .value-grid
 const location = document.getElementById('location');
 const services = document.getElementById('services');
 const audience = document.getElementById('audience');
+const statement = document.querySelector('section.statement');
 const footer = document.querySelector('.site-footer');
 
 if (header) {
@@ -59,6 +61,11 @@ if (services) {
 if (audience) {
   const audienceRoot = createRoot(audience);
   flushSync(() => audienceRoot.render(<AudienceSection />));
+}
+
+if (statement) {
+  const statementRoot = createRoot(statement);
+  flushSync(() => statementRoot.render(<StatementSection />));
 }
 
 if (footer) {
