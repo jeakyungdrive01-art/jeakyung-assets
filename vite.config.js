@@ -20,7 +20,7 @@ const preserveLegacyScript = {
 
 export default defineConfig({
   plugins: [preserveLegacyScript, react()],
-  publicDir: false,
+  publicDir: 'static',
   build: {
     rollupOptions: {
       input: {

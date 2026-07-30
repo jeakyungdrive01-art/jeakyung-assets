@@ -1,14 +1,17 @@
-import { useEffect } from 'react';
+import { useLayoutEffect } from 'react';
 
 export default function useRevealOnScroll() {
-  useEffect(() => {
+  useLayoutEffect(() => {
+    const documentElement = document.documentElement;
     const main = document.getElementById('main-content');
     const revealElements = main?.querySelectorAll('.reveal') ?? [];
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+    documentElement.classList.add('reveal-ready');
+
     if (reduceMotion || !('IntersectionObserver' in window)) {
       revealElements.forEach((element) => element.classList.add('is-visible'));
-      return undefined;
+      return () => documentElement.classList.remove('reveal-ready');
     }
 
     const revealObserver = new IntersectionObserver((entries, observer) => {
@@ -24,6 +27,9 @@ export default function useRevealOnScroll() {
 
     revealElements.forEach((element) => revealObserver.observe(element));
 
-    return () => revealObserver.disconnect();
+    return () => {
+      revealObserver.disconnect();
+      documentElement.classList.remove('reveal-ready');
+    };
   }, []);
 }

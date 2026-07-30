@@ -39,10 +39,18 @@ export default function PublicFooter({ page }) {
               href={WORK_SYSTEM_URL}
               target="_blank"
               rel="noopener noreferrer"
+              aria-label="그룹웨어와 메일 접속, 새 창"
             >
               🔐 그룹웨어 | 메일 ↗
             </a>
-            <a href={CONSULTATION_URL} target="_blank" rel="noopener noreferrer">카카오톡 문의 ↗</a>
+            <a
+              href={CONSULTATION_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="카카오톡 문의, 새 창"
+            >
+              카카오톡 문의 ↗
+            </a>
           </div>
           <div>
             <p>Policy</p>
