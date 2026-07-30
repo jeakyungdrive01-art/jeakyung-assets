@@ -1,0 +1,57 @@
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+
+import { AuthProvider } from './context/AuthContext.jsx';
+import AppShell from './layouts/AppShell.jsx';
+import AuthLayout from './layouts/AuthLayout.jsx';
+import LoginPage from './pages/auth/LoginPage.jsx';
+import PendingPage from './pages/auth/PendingPage.jsx';
+import ResetPasswordPage from './pages/auth/ResetPasswordPage.jsx';
+import SignupPage from './pages/auth/SignupPage.jsx';
+import AdminPage from './pages/internal/AdminPage.jsx';
+import ApprovalPage from './pages/internal/ApprovalPage.jsx';
+import BoardPage from './pages/internal/BoardPage.jsx';
+import BoardsPage from './pages/internal/BoardsPage.jsx';
+import CalendarPage from './pages/internal/CalendarPage.jsx';
+import DashboardPage from './pages/internal/DashboardPage.jsx';
+import FilesPage from './pages/internal/FilesPage.jsx';
+import MailPage from './pages/internal/MailPage.jsx';
+import OrganizationPage from './pages/internal/OrganizationPage.jsx';
+import PostDetailPage from './pages/internal/PostDetailPage.jsx';
+import PostWritePage from './pages/internal/PostWritePage.jsx';
+import ProtectedRoute from './routes/ProtectedRoute.jsx';
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <BrowserRouter basename="/groupware">
+        <Routes>
+          <Route path="/" element={<Navigate to="/login" replace />} />
+          <Route element={<AuthLayout />}>
+            <Route path="login" element={<LoginPage />} />
+            <Route path="signup" element={<SignupPage />} />
+            <Route path="pending" element={<PendingPage />} />
+            <Route path="reset-password" element={<ResetPasswordPage />} />
+          </Route>
+
+          <Route element={<ProtectedRoute />}>
+            <Route element={<AppShell />}>
+              <Route path="dashboard" element={<DashboardPage />} />
+              <Route path="mail" element={<MailPage />} />
+              <Route path="organization" element={<OrganizationPage />} />
+              <Route path="boards" element={<BoardsPage />} />
+              <Route path="boards/:boardSlug" element={<BoardPage />} />
+              <Route path="boards/:boardSlug/posts/:postId" element={<PostDetailPage />} />
+              <Route path="boards/:boardSlug/write" element={<PostWritePage />} />
+              <Route path="approval" element={<ApprovalPage />} />
+              <Route path="calendar" element={<CalendarPage />} />
+              <Route path="files" element={<FilesPage />} />
+              <Route path="admin" element={<AdminPage />} />
+            </Route>
+          </Route>
+
+          <Route path="*" element={<Navigate to="/login" replace />} />
+        </Routes>
+      </BrowserRouter>
+    </AuthProvider>
+  );
+}

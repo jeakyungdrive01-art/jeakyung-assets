@@ -18,14 +18,40 @@ const preserveLegacyScript = {
   },
 };
 
+function useGroupwareFallback(middlewares) {
+  middlewares.use((request, _response, next) => {
+    const [pathname, query = ''] = (request.url || '').split('?');
+    const isGroupwareRoute = pathname === '/groupware'
+      || pathname === '/groupware/'
+      || (pathname.startsWith('/groupware/') && !pathname.split('/').at(-1).includes('.'));
+
+    if (isGroupwareRoute) {
+      request.url = `/groupware/index.html${query ? `?${query}` : ''}`;
+    }
+
+    next();
+  });
+}
+
+const groupwareSpaFallback = {
+  name: 'groupware-spa-fallback',
+  configureServer(server) {
+    useGroupwareFallback(server.middlewares);
+  },
+  configurePreviewServer(server) {
+    useGroupwareFallback(server.middlewares);
+  },
+};
+
 export default defineConfig({
-  plugins: [preserveLegacyScript, react()],
+  plugins: [groupwareSpaFallback, preserveLegacyScript, react()],
   publicDir: 'static',
   build: {
     rollupOptions: {
       input: {
         home: fileURLToPath(new URL('index.html', import.meta.url)),
         privacy: fileURLToPath(new URL('privacy/index.html', import.meta.url)),
+        groupware: fileURLToPath(new URL('groupware/index.html', import.meta.url)),
       },
     },
   },
