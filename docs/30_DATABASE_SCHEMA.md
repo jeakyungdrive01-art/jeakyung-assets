@@ -18,11 +18,23 @@ Supabase PostgreSQL에 적용할 논리 모델이다. G2 스키마는 `supabase/
 
 가입 신청은 별도 권한 테이블로 사용하지 않고 `profiles.requested_*`에 보존한다. 승인 시 `department_id`, `position_id`, `job_title_id`와 역할을 관리자 RPC가 확정한다.
 
-## 업무 모듈
+## G3 대시보드·게시판
+
+| 영역 | 실제 테이블 |
+| --- | --- |
+| 대시보드 | `dashboard_widgets`, `dashboard_widget_assignments`, `user_dashboard_preferences` |
+| 게시판 정의 | `board_groups`, `boards`, `board_categories`, `board_permission_rules`, `board_managers` |
+| 사용자 탐색 | `board_favorites`, `board_recent_visits` |
+| 게시판 콘텐츠 | `board_posts`, `board_comments`, `board_reactions`, `board_post_views`, `board_attachments` |
+
+- G3 스키마는 `202607310001_groupware_dashboards_boards.sql`과 작성자 대상 권한 보완 마이그레이션 `202607310002_fix_board_author_permissions.sql`로 재현한다.
+- 위젯 배포와 게시판 권한 대상은 역할·부서·직급·직책·사용자 관계를 기존 G2 테이블에서 판정한다.
+- 게시글 조회수는 사용자·날짜 조합으로 중복 증가를 제한하고, 삭제는 게시글·댓글·첨부 메타데이터의 소프트 삭제를 우선한다.
+
+## 이후 업무 모듈
 
 | 모듈 | 주요 테이블 후보 |
 | --- | --- |
-| 게시판 | `boards`, `board_categories`, `board_permissions`, `posts`, `comments`, `attachments`, `board_favorites` |
 | 전자결재 | `approval_templates`, `approval_documents`, `approval_steps`, `approval_actions` |
 | 일정 | `calendars`, `events`, `event_attendees` |
 | 파일 | `file_spaces`, `file_entries`, `file_permissions` |

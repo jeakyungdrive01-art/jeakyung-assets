@@ -56,3 +56,12 @@ G0–G1에서는 Supabase URL, 공개 키, 스키마와 RLS를 연결하지 않�
 - 브라우저에는 `VITE_SUPABASE_URL`과 publishable key만 제공하며 실제 값은 Git에 저장하지 않는다.
 
 실제 프로젝트에서의 정책 공격 시나리오 검증은 마이그레이션 적용과 관리자 부트스트랩 후 수행한다.
+
+## G3 대시보드·게시판 보안
+
+- G3의 신규 public 테이블 15개는 모두 RLS를 활성화하고, 일반 테이블 직접 권한은 자기 위젯 설정·즐겨찾기·최근 방문에 필요한 최소 범위만 부여한다.
+- 위젯 배포는 `get_my_dashboard_widgets()`, 게시판 접근은 `evaluate_board_access()`와 호출 사용자 전용 `can_access_board()`에서 중앙 판정한다.
+- 권한 기본값은 deny이며 일치하는 explicit deny가 하나라도 있으면 allow보다 우선한다. `user_metadata`는 판정에 사용하지 않는다.
+- 익명 응답은 이름을 `익명`으로 치환하고 작성자 UUID를 일반 RPC 응답에서 제외한다. 실제 소유자 확인은 서버 함수 안에서 수행한다.
+- 첨부는 비공개 Storage 버킷, 권한 확인 함수, 정규화한 UUID 기반 경로와 60초 signed URL을 사용한다. soft delete된 첨부 경로는 Storage 읽기 정책에서도 차단한다.
+- 관리자 설정 변경·권한 변경·보관·안전 삭제는 감사 로그에 기록한다.
