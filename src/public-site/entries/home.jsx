@@ -1,6 +1,7 @@
 import { flushSync } from 'react-dom';
 import { createRoot } from 'react-dom/client';
 
+import AudienceSection from '../components/home/AudienceSection.jsx';
 import CeoGreeting from '../components/home/CeoGreeting.jsx';
 import CompanyOverview from '../components/home/CompanyOverview.jsx';
 import CoreValues from '../components/home/CoreValues.jsx';
@@ -17,6 +18,7 @@ const companyOverview = document.querySelector('#about > .content-width > .compa
 const coreValues = document.querySelector('#about > .content-width > .value-grid');
 const location = document.getElementById('location');
 const services = document.getElementById('services');
+const audience = document.getElementById('audience');
 const footer = document.querySelector('.site-footer');
 
 if (header) {
@@ -52,6 +54,11 @@ if (location) {
 if (services) {
   const servicesRoot = createRoot(services);
   flushSync(() => servicesRoot.render(<ServicesSection />));
+}
+
+if (audience) {
+  const audienceRoot = createRoot(audience);
+  flushSync(() => audienceRoot.render(<AudienceSection />));
 }
 
 if (footer) {
