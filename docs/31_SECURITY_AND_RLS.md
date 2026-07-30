@@ -43,4 +43,16 @@
 
 ## G0–G1 상태
 
-Supabase URL, 공개 키, 스키마와 RLS는 아직 생성하지 않는다. 환경 변수 파일도 만들지 않는다.
+G0–G1에서는 Supabase URL, 공개 키, 스키마와 RLS를 연결하지 않았다.
+
+## G2 정책과 함수
+
+- `departments`, `positions`, `job_titles`, `profiles`, `roles`, `user_role_assignments`, `audit_logs`에 RLS를 활성화한다.
+- 사용자는 본인 프로필만 읽고 열 수준 권한으로 이름·연락처만 수정할 수 있다. 상태·조직·승인자·역할은 직접 수정할 수 없다.
+- 활성 조직 조회는 승인 회원에게만 허용하고 가입 선택지는 최소 필드만 반환하는 `get_signup_options()` RPC를 사용한다.
+- `has_role()`, `is_approved_member()`, `is_membership_admin()`은 사용자 수정 가능 metadata가 아닌 DB 행을 확인한다.
+- `approve_membership()`, `reject_membership()`, `upsert_organization_item()`은 `SECURITY DEFINER`, 고정 `search_path`, 호출자 재검증과 감사 기록을 사용한다.
+- 함수 실행 권한은 `anon`·`authenticated`에 필요한 범위만 부여하고 감사 로그의 일반 수정·삭제는 허용하지 않는다.
+- 브라우저에는 `VITE_SUPABASE_URL`과 publishable key만 제공하며 실제 값은 Git에 저장하지 않는다.
+
+실제 프로젝트에서의 정책 공격 시나리오 검증은 마이그레이션 적용과 관리자 부트스트랩 후 수행한다.
