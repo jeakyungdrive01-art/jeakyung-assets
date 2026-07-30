@@ -4,6 +4,7 @@ import { createRoot } from 'react-dom/client';
 import AudienceSection from '../components/home/AudienceSection.jsx';
 import CeoGreeting from '../components/home/CeoGreeting.jsx';
 import CompanyOverview from '../components/home/CompanyOverview.jsx';
+import ContactSection from '../components/home/ContactSection.jsx';
 import CoreValues from '../components/home/CoreValues.jsx';
 import FAQSection from '../components/home/FAQSection.jsx';
 import GuideSection from '../components/home/GuideSection.jsx';
@@ -25,6 +26,7 @@ const audience = document.getElementById('audience');
 const statement = document.querySelector('section.statement');
 const guide = document.getElementById('guide');
 const faq = document.getElementById('faq');
+const contact = document.getElementById('contact');
 const footer = document.querySelector('.site-footer');
 
 if (header) {
@@ -80,6 +82,11 @@ if (guide) {
 if (faq) {
   const faqRoot = createRoot(faq);
   flushSync(() => faqRoot.render(<FAQSection />));
+}
+
+if (contact) {
+  const contactRoot = createRoot(contact);
+  flushSync(() => contactRoot.render(<ContactSection />));
 }
 
 if (footer) {
