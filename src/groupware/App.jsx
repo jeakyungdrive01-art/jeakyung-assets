@@ -48,6 +48,7 @@ export default function App() {
               <Route path="boards" element={<BoardsPage />} />
               <Route path="boards/:boardSlug" element={<BoardPage />} />
               <Route path="boards/:boardSlug/posts/:postId" element={<PostDetailPage />} />
+              <Route path="boards/:boardSlug/posts/:postId/edit" element={<PostWritePage />} />
               <Route path="boards/:boardSlug/write" element={<PostWritePage />} />
               <Route path="approval" element={<ApprovalPage />} />
               <Route path="calendar" element={<CalendarPage />} />

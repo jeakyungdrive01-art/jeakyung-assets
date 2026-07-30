@@ -1,13 +1,15 @@
-import { useParams } from 'react-router-dom';
-
-import PageScaffold from '../../components/PageScaffold.jsx';
+import { useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { getBoardOverview, getBoardPost, saveBoardPost } from '../../services/boardService.js';
 
 export default function PostWritePage() {
-  const { boardSlug } = useParams();
-  return <PageScaffold eyebrow="WRITE" title="게시글 작성" description={`게시판 식별자: ${boardSlug}`} notice="현재는 작성 폼 구조만 계획되어 있으며 게시글을 저장하지 않습니다." sections={[
-    { title: '제목과 카테고리', description: '필수 제목과 게시판 설정에 맞는 카테고리를 선택합니다.' },
-    { title: '본문 편집', description: '허용된 서식만 안전하게 입력하는 편집 영역을 제공합니다.' },
-    { title: '첨부파일', description: '크기, 형식과 보안 정책을 통과한 파일만 등록합니다.' },
-    { title: '게시 옵션', description: '권한이 있을 때 공지와 익명 옵션을 제공합니다.' },
-  ]} />;
+  const { boardSlug, postId } = useParams(); const navigate = useNavigate(); const [overview, setOverview] = useState(null); const [post, setPost] = useState(null); const [error, setError] = useState(''); const [saving, setSaving] = useState(false);
+  useEffect(() => {
+    Promise.all([getBoardOverview(boardSlug), postId ? getBoardPost(postId) : Promise.resolve(null)])
+      .then(([boardOverview, postData]) => { setOverview(boardOverview); setPost(postData?.post ?? null); })
+      .catch(() => setError('글쓰기 권한을 확인하지 못했습니다.'));
+  }, [boardSlug, postId]);
+  const submit = async (formElement, status) => { if (saving || !overview) return; setSaving(true); const form = new FormData(formElement); try { const id = await saveBoardPost({ id: postId, boardId: overview.board.id, title: form.get('title'), content: form.get('content'), categoryId: form.get('categoryId'), postPrefix: form.get('postPrefix'), isAnonymous: form.get('anonymous') === 'on', isNotice: form.get('notice') === 'on', isImportant: form.get('important') === 'on', isPinned: form.get('pinned') === 'on', status }); navigate(`/boards/${boardSlug}/posts/${id}`); } catch { setError('게시글을 저장하지 못했습니다. 권한과 입력값을 확인해 주세요.'); setSaving(false); } };
+  if (!overview) return <p className="gw-empty-state">게시판 설정을 불러오고 있습니다.</p>;
+  return <article className="gw-page" aria-labelledby="write-title"><header className="gw-page-header"><div><span className="gw-eyebrow">WRITE</span><h1 id="write-title">{overview.board.name} {postId ? '글 수정' : '글쓰기'}</h1><p>게시판 권한과 설정을 서버에서 다시 검증합니다.</p></div></header>{error && <div className="gw-notice gw-notice--warning" role="alert">{error}</div>}<form className="gw-editor-form" onSubmit={(event) => { event.preventDefault(); submit(event.currentTarget, 'published'); }}><label className="gw-field"><span>제목</span><input name="title" required maxLength="240" defaultValue={post?.title ?? ''} /></label>{overview.board.settings.use_prefix && <label className="gw-field"><span>말머리</span><input name="postPrefix" maxLength="40" defaultValue={post?.prefix ?? ''} /></label>}{overview.categories.length > 0 && <label className="gw-field"><span>카테고리</span><select name="categoryId" defaultValue={post?.category_id ?? ''}><option value="">선택 안 함</option>{overview.categories.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>}<label className="gw-field"><span>본문</span><textarea name="content" rows="14" required defaultValue={post?.content ?? ''} /></label><div className="gw-check-grid">{overview.board.settings.allow_anonymous && <label><input name="anonymous" type="checkbox" defaultChecked={post?.is_anonymous ?? false} /> 익명으로 작성</label>}{overview.permissions.notice && <label><input name="notice" type="checkbox" defaultChecked={post?.is_notice ?? false} /> 공지글</label>}{overview.permissions.notice && <label><input name="important" type="checkbox" defaultChecked={post?.is_important ?? false} /> 중요글</label>}{overview.permissions.pin && <label><input name="pinned" type="checkbox" defaultChecked={post?.is_pinned ?? false} /> 상단 고정</label>}</div><div className="gw-admin-actions"><button className="gw-primary-button" type="submit" disabled={saving}>게시</button><button className="gw-secondary-button" type="button" disabled={saving} onClick={(event) => submit(event.currentTarget.form, 'draft')}>임시 저장</button></div></form></article>;
 }

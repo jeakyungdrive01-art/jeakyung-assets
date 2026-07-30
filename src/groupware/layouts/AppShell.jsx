@@ -5,6 +5,7 @@ import GroupwareBrand from '../components/GroupwareBrand.jsx';
 import NavigationIcon from '../components/NavigationIcon.jsx';
 import { GROUPWARE_NAVIGATION, getRouteTitle } from '../config/navigation.js';
 import { useAuth } from '../context/AuthContext.jsx';
+import { getVisibleBoards } from '../services/boardService.js';
 
 const MOBILE_QUERY = '(max-width: 1023px)';
 
@@ -17,6 +18,7 @@ export default function AppShell() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(() => window.matchMedia(MOBILE_QUERY).matches);
   const [signOutError, setSignOutError] = useState('');
+  const [boards, setBoards] = useState([]);
 
   const visibleNavigation = useMemo(
     () => GROUPWARE_NAVIGATION.filter((item) => !item.requiredPermission || auth.permissions.includes(item.requiredPermission)),
@@ -61,6 +63,19 @@ export default function AppShell() {
     return () => document.body.classList.remove('gw-drawer-open');
   }, [drawerOpen, isMobile]);
 
+  useEffect(() => {
+    if (auth.status !== 'approved') { setBoards([]); return; }
+    getVisibleBoards().then(setBoards).catch(() => setBoards([]));
+  }, [auth.status, location.pathname]);
+
+  const boardGroups = useMemo(() => boards.reduce((result, board) => {
+    const group = board.group_name ?? '기타';
+    (result[group] ??= []).push(board);
+    return result;
+  }, {}), [boards]);
+  const favoriteBoards = boards.filter((board) => board.is_favorite);
+  const recentBoards = boards.filter((board) => board.last_visited_at).sort((a, b) => new Date(b.last_visited_at) - new Date(a.last_visited_at)).slice(0, 5);
+
   const sidebarHidden = isMobile && !drawerOpen;
 
   const handleSignOut = async () => {
@@ -87,17 +102,25 @@ export default function AppShell() {
         </div>
         <nav className="gw-sidebar-nav" id="groupware-navigation">
           {visibleNavigation.map((item, index) => (
-            <NavLink
-              className={({ isActive }) => `gw-nav-link${isActive ? ' is-active' : ''}`}
-              key={item.key}
-              ref={index === 0 ? firstMenuRef : undefined}
-              to={item.path}
-              title={collapsed ? item.label : undefined}
-              onClick={() => isMobile && closeDrawer()}
-            >
-              <NavigationIcon name={item.key} />
-              <span>{item.label}</span>
-            </NavLink>
+            <div className="gw-nav-block" key={item.key}>
+              <NavLink
+                className={({ isActive }) => `gw-nav-link${isActive ? ' is-active' : ''}`}
+                ref={index === 0 ? firstMenuRef : undefined}
+                to={item.path}
+                title={collapsed ? item.label : undefined}
+                onClick={() => isMobile && closeDrawer()}
+              >
+                <NavigationIcon name={item.key} />
+                <span>{item.label}</span>
+              </NavLink>
+              {item.key === 'boards' && !collapsed && boards.length > 0 && (
+                <div className="gw-board-nav" aria-label="내 게시판">
+                  {favoriteBoards.length > 0 && <BoardNavGroup label="즐겨찾기" boards={favoriteBoards} onNavigate={() => isMobile && closeDrawer()} />}
+                  {recentBoards.length > 0 && <BoardNavGroup label="최근" boards={recentBoards} onNavigate={() => isMobile && closeDrawer()} />}
+                  {Object.entries(boardGroups).map(([group, items]) => <BoardNavGroup key={group} label={group} boards={items} onNavigate={() => isMobile && closeDrawer()} />)}
+                </div>
+              )}
+            </div>
           ))}
         </nav>
         <div className="gw-sidebar-footer">
@@ -131,5 +154,14 @@ export default function AppShell() {
         </main>
       </div>
     </div>
+  );
+}
+
+function BoardNavGroup({ label, boards, onNavigate }) {
+  return (
+    <details className="gw-board-nav-group" open>
+      <summary>{label}<span>{boards.length}</span></summary>
+      {boards.map((board) => <NavLink className={({ isActive }) => isActive ? 'is-active' : undefined} key={`${label}-${board.id}`} to={`/boards/${board.slug}`} onClick={onNavigate}>{board.name}</NavLink>)}
+    </details>
   );
 }
