@@ -9,8 +9,8 @@ import PendingPage from './pages/auth/PendingPage.jsx';
 import ResetPasswordPage from './pages/auth/ResetPasswordPage.jsx';
 import SignupPage from './pages/auth/SignupPage.jsx';
 import UpdatePasswordPage from './pages/auth/UpdatePasswordPage.jsx';
+import ApprovalRoutes from './pages/internal/ApprovalRoutes.jsx';
 import AdminPage from './pages/internal/AdminPage.jsx';
-import ApprovalPage from './pages/internal/ApprovalPage.jsx';
 import BoardPage from './pages/internal/BoardPage.jsx';
 import BoardsPage from './pages/internal/BoardsPage.jsx';
 import CalendarPage from './pages/internal/CalendarPage.jsx';
@@ -59,7 +59,7 @@ export default function App() {
               <Route path="boards/:boardSlug/posts/:postId" element={<PostDetailPage />} />
               <Route path="boards/:boardSlug/posts/:postId/edit" element={<EditorRoute />} />
               <Route path="boards/:boardSlug/write" element={<EditorRoute />} />
-              <Route path="approval" element={<ApprovalPage />} />
+              <Route path="approval/*" element={<ApprovalRoutes />} />
               <Route path="calendar" element={<CalendarPage />} />
               <Route path="files" element={<FilesPage />} />
               <Route element={<AdminRoute />}>
