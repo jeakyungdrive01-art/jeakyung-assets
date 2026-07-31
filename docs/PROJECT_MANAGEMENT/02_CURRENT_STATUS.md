@@ -2,7 +2,7 @@
 
 [문서 목록](./00_INDEX.md) · [전체 계획](./03_MASTER_PLAN.md) · [진행 로그](./05_PROGRESS_LOG.md)
 
-기준 시각: **2026-07-31 19:18 KST**
+기준 시각: **2026-08-01 00:05 KST**
 
 ## 전체 진행률
 
@@ -12,29 +12,10 @@
 
 ## 현재 Git 상태
 
-현재 완료 브랜치:
+현재 작업 브랜치:
 
 ```text
-groupware/dashboard-boards
-```
-
-현재 완료 커밋:
-
-```text
-25f47d13def530f65d5641ad6389a34753d90b88
-feat: add role switching and employee profiles
-```
-
-확인된 상태:
-
-- 로컬·원격 차이: `0/0`
-- 추적 파일: 깨끗함
-- 기존 0바이트 Placeholder 11개만 미추적
-- `main` 미변경
-- Production 미변경
-- 도메인, CNAME, DNS 미변경
-- PR 미생성
-- force push 없음
+groupware/approval
 
 ## Supabase 상태
 
@@ -181,6 +162,12 @@ https://jeakyung.quv.kr
 - 관리자 시스템 사용량
 - 용량 경고와 정리 후보
 
+## 최신 커밋
+b10fac9 fix(groupware): align delegated approval document access
+
+## 직전 기능 커밋
+779084e feat(groupware): secure approval inbox and policies
+
 ## 모바일 상태
 
 검증 화면:
@@ -208,7 +195,38 @@ https://jeakyung.quv.kr
 
 ## 아직 시작하지 않은 핵심 기능
 
-- Phase G4 전자결재
+## 아직 완료되지 않은 핵심 기능
+
+### 전자결재
+
+- 실제 사용자 기반 결재함 데이터 테스트
+- 직접 결재자 시나리오 테스트
+- 위임 결재자 시나리오 테스트
+- 참조·열람함 전용 RPC
+- 실제 대결·위임 관리 페이지
+- 양식 빌더
+- 양식 버전 발행
+- 기안 생성 트랜잭션 RPC
+- 승인·반려·보류·회수 처리 RPC
+- 병렬·합의·협조 결재 처리
+- 제한적 전결
+- 첨부파일 실제 업로드
+- 내부 알림 실제 연동
+- 대시보드 전자결재 위젯
+- 관리자 전자결재 화면
+- Vercel Preview UI 검수
+- Supabase 원격 적용
+- PR 및 `main` 병합
+
+### 후속 Phase
+
+- 일정·캘린더
+- 공통 알림 확장
+- 일반 파일함
+- mail.jeakyung.com 연동
+- 운영 Production 전환
+- 공개 사이트 그룹웨어 링크 교체
+- 유지보수·디자인 토큰·팝업 관리자
 - 일정·캘린더
 - 공통 알림 확장
 - 일반 파일함
