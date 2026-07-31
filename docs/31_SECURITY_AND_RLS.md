@@ -64,4 +64,11 @@ G0–G1에서는 Supabase URL, 공개 키, 스키마와 RLS를 연결하지 않�
 - 권한 기본값은 deny이며 일치하는 explicit deny가 하나라도 있으면 allow보다 우선한다. `user_metadata`는 판정에 사용하지 않는다.
 - 익명 응답은 이름을 `익명`으로 치환하고 작성자 UUID를 일반 RPC 응답에서 제외한다. 실제 소유자 확인은 서버 함수 안에서 수행한다.
 - 첨부는 비공개 Storage 버킷, 권한 확인 함수, 정규화한 UUID 기반 경로와 60초 signed URL을 사용한다. soft delete된 첨부 경로는 Storage 읽기 정책에서도 차단한다.
+- 본문 이미지 업로드는 사용자 JWT로 보호된 `board-image-upload` Edge Function을 통한다. `attachment_upload`와 글 작성·수정 권한을 모두 확인하고, 브라우저 검증 뒤에도 서버에서 MIME·매직 바이트·ImageMagick WASM 디코딩·크기·개수·합산 용량을 재검증한다.
+- Edge Function은 `@supabase/server` 1.4.1과 `@imagemagick/magick-wasm` 0.0.41을 고정해 사용한다. Storage insert 정책도 경로 소유권·게시글 편집 권한·형식·크기·장수·합산 용량을 확인하고, 교체 실패 시 신규 객체를 제거한다.
+- 저장 본문에는 URL이나 Base64를 허용하지 않는다. 서버의 JSON 노드·mark 허용 목록과 동일 게시글 attachment 소유 검증으로 XSS와 다른 게시글 attachment ID 도용을 차단한다.
+- 본문 이미지 조회는 `detail_read`와 `attachment_view`를 모두 통과한 뒤 짧은 signed URL을 발급한다. 일반 첨부 다운로드에는 `attachment_download`도 요구한다.
+- 익명 글의 첨부 응답에는 `uploaded_by`를 포함하지 않는다. 이미지 등록 RPC는 Edge Function의 서버 전용 관리자 클라이언트만 실행하며 `service_role`·secret은 브라우저 번들, Git과 로그에 포함하지 않는다.
+- 관리자 시스템 사용량 RPC는 `SECURITY DEFINER`와 고정 `search_path`를 사용하되 `is_membership_admin()`을 먼저 검증하고, 집계값 외의 사용자·파일 경로는 반환하지 않는다.
+- 미등록 Storage 객체와 정리 후보는 개수·용량만 노출하며 관리자 화면에서 즉시 영구 삭제하지 않는다.
 - 관리자 설정 변경·권한 변경·보관·안전 삭제는 감사 로그에 기록한다.

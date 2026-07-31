@@ -27,9 +27,12 @@ Supabase PostgreSQL에 적용할 논리 모델이다. G2 스키마는 `supabase/
 | 사용자 탐색 | `board_favorites`, `board_recent_visits` |
 | 게시판 콘텐츠 | `board_posts`, `board_comments`, `board_reactions`, `board_post_views`, `board_attachments` |
 
-- G3 스키마는 `202607310001_groupware_dashboards_boards.sql`과 작성자 대상 권한 보완 마이그레이션 `202607310002_fix_board_author_permissions.sql`로 재현한다.
+- G3 스키마는 `202607310001_groupware_dashboards_boards.sql`, 작성자 대상 권한 보완 `202607310002_fix_board_author_permissions.sql`, 본문 이미지 확장 `202607310003_board_inline_images.sql`로 재현한다.
 - 위젯 배포와 게시판 권한 대상은 역할·부서·직급·직책·사용자 관계를 기존 G2 테이블에서 판정한다.
 - 게시글 조회수는 사용자·날짜 조합으로 중복 증가를 제한하고, 삭제는 게시글·댓글·첨부 메타데이터의 소프트 삭제를 우선한다.
+- `board_posts.content_document`는 서버 허용 목록을 통과한 Tiptap JSON을 보존하고 `content`는 검색용 평문을 유지한다. `cover_attachment_id`는 갤러리 대표 이미지를 가리킨다.
+- `board_attachments.purpose`는 본문 이미지와 일반 첨부를 구분한다. 이미지 크기·형식·대체 텍스트·캡션·정렬·표시 크기·본문 순서와 `pending`·`active`·`cleanup_candidate`·`deleted` 수명주기를 기록한다.
+- `get_admin_system_usage()`는 관리자 전용 집계 RPC로 회원·콘텐츠·첨부 생명주기·Storage 객체와 게시판별 사용량을 반환한다. 원본 행과 개인 식별정보는 반환하지 않는다.
 
 ## 이후 업무 모듈
 

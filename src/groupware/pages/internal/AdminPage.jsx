@@ -4,6 +4,7 @@ import MembershipApprovalPanel from '../../components/admin/MembershipApprovalPa
 import OrganizationManagementPanel from '../../components/admin/OrganizationManagementPanel.jsx';
 import BoardBuilderPanel from '../../components/admin/BoardBuilderPanel.jsx';
 import DashboardWidgetPanel from '../../components/admin/DashboardWidgetPanel.jsx';
+import SystemUsagePanel from '../../components/admin/SystemUsagePanel.jsx';
 import { getOrganizationDirectory } from '../../services/organizationService.js';
 
 const EMPTY_DIRECTORY = { departments: [], positions: [], jobTitles: [], roles: [] };
@@ -32,7 +33,7 @@ export default function AdminPage() {
         <div>
           <span className="gw-eyebrow">ADMINISTRATION</span>
           <h1 id="page-title">관리자</h1>
-          <p>회원·조직과 대시보드·게시판 구성을 서버 권한 검증과 감사 로그를 거쳐 관리합니다.</p>
+          <p>회원·조직, 시스템 사용량과 대시보드·게시판 구성을 서버 권한 검증과 감사 로그를 거쳐 관리합니다.</p>
         </div>
         <span className="gw-phase-badge">G3 대시보드·게시판</span>
       </header>
@@ -41,6 +42,7 @@ export default function AdminPage() {
         <p className="gw-empty-state" role="status">관리자 데이터를 불러오고 있습니다.</p>
       ) : (
         <>
+          <SystemUsagePanel />
           <MembershipApprovalPanel directory={directory} />
           <OrganizationManagementPanel directory={directory} onReload={loadDirectory} />
           <DashboardWidgetPanel directory={directory} />

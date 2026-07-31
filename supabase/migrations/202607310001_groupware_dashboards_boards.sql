@@ -451,7 +451,7 @@ end; $$;
 
 create or replace function public.manage_board(p_board jsonb,p_rules jsonb,p_categories jsonb,p_managers jsonb)
 returns uuid language plpgsql security definer set search_path=pg_catalog as $$
-declare result_id uuid; before_data jsonb; after_data jsonb; item jsonb; used boolean;
+declare result_id uuid; before_data jsonb; after_data jsonb; item jsonb;
 begin
   if not public.is_membership_admin() then raise exception 'membership_admin_required' using errcode='42501'; end if;
   result_id:=nullif(p_board->>'id','')::uuid;

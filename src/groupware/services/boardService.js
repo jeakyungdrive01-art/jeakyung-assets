@@ -14,11 +14,12 @@ export const getVisibleBoards = () => rpc('get_my_visible_boards').then((data) =
 export const getBoardOverview = (slug) => rpc('get_board_overview', { p_slug: slug });
 export const getBoardPosts = (slug, { search = '', category = null, page = 1 } = {}) => rpc('get_board_posts', { p_slug: slug, p_search: search || null, p_category: category, p_page: page });
 export const getBoardPost = (postId) => rpc('get_board_post', { p_post_id: postId });
+export const createBoardPostDraft = (boardId) => rpc('create_board_post_draft', { p_board_id: boardId });
 export const saveBoardPost = (post) => rpc('save_board_post', {
   p_post_id: post.id ?? null,
   p_board_id: post.boardId,
   p_title: post.title,
-  p_content: post.content,
+  p_content_document: post.contentDocument,
   p_category_id: post.categoryId || null,
   p_post_prefix: post.postPrefix || null,
   p_is_anonymous: Boolean(post.isAnonymous),
@@ -26,6 +27,7 @@ export const saveBoardPost = (post) => rpc('save_board_post', {
   p_is_important: Boolean(post.isImportant),
   p_is_pinned: Boolean(post.isPinned),
   p_status: post.status ?? 'published',
+  p_cover_attachment_id: post.coverAttachmentId ?? null,
 });
 export const deleteBoardPost = (postId) => rpc('delete_board_post', { p_post_id: postId });
 export const saveBoardComment = (comment) => rpc('save_board_comment', {
@@ -51,7 +53,7 @@ export async function uploadBoardAttachment({ boardId, postId, file, userId, max
   if (file.size > safeLimitMb * 1024 * 1024) throw new Error(`첨부파일은 ${safeLimitMb}MB 이하여야 합니다.`);
   if (BLOCKED_EXTENSIONS.test(file.name)) throw new Error('보안상 허용되지 않는 파일 형식입니다.');
   const safeName = file.name.normalize('NFKC').replace(SAFE_FILE, '-').replace(/^-+|-+$/g, '') || 'attachment';
-  const storagePath = `${boardId}/${userId}/${crypto.randomUUID()}-${safeName}`;
+  const storagePath = `${boardId}/${userId}/general/${postId}/${crypto.randomUUID()}-${safeName}`;
   const client = requireSupabase();
   const { error: uploadError } = await client.storage.from(BUCKET).upload(storagePath, file, { contentType: file.type || 'application/octet-stream', upsert: false });
   if (uploadError) throw uploadError;
@@ -70,9 +72,33 @@ export async function uploadBoardAttachment({ boardId, postId, file, userId, max
   }
 }
 
-export async function getAttachmentDownloadUrl(attachmentId) {
+export async function uploadInlineBoardImage({ boardId, postId, file, originalName = file.name, replacesAttachmentId = null }) {
+  const form = new FormData();
+  form.set('board_id', boardId);
+  form.set('post_id', postId);
+  form.set('original_name', originalName);
+  if (replacesAttachmentId) form.set('replaces_attachment_id', replacesAttachmentId);
+  form.set('file', file, file.name);
+  const { data, error } = await requireSupabase().functions.invoke('board-image-upload', { body: form });
+  if (error) throw error;
+  if (data?.error) throw new Error(data.error);
+  if (!data?.attachment?.id) throw new Error('업로드 결과에서 첨부 ID를 확인하지 못했습니다.');
+  return data.attachment;
+}
+
+async function createAttachmentSignedUrl(attachmentId, download) {
   const metadata = await rpc('get_board_attachment_path', { p_attachment_id: attachmentId });
-  const { data, error } = await requireSupabase().storage.from(BUCKET).createSignedUrl(metadata.storage_path, 60, { download: metadata.original_name });
+  const options = download ? { download: metadata.original_name } : undefined;
+  const { data, error } = await requireSupabase().storage.from(BUCKET).createSignedUrl(metadata.storage_path, 60, options);
   if (error) throw error;
   return data.signedUrl;
+}
+
+export const getAttachmentDownloadUrl = (attachmentId) => createAttachmentSignedUrl(attachmentId, true);
+export const getAttachmentViewUrl = (attachmentId) => createAttachmentSignedUrl(attachmentId, false);
+
+export async function getInlineAttachmentUrls(attachments = []) {
+  const inlineAttachments = attachments.filter((item) => item.purpose === 'inline_image');
+  const results = await Promise.allSettled(inlineAttachments.map(async (item) => [item.id, await getAttachmentViewUrl(item.id)]));
+  return Object.fromEntries(results.filter((result) => result.status === 'fulfilled').map((result) => result.value));
 }

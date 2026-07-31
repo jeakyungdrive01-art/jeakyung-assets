@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 
 import { AuthProvider } from './context/AuthContext.jsx';
@@ -18,10 +19,15 @@ import FilesPage from './pages/internal/FilesPage.jsx';
 import MailPage from './pages/internal/MailPage.jsx';
 import OrganizationPage from './pages/internal/OrganizationPage.jsx';
 import PostDetailPage from './pages/internal/PostDetailPage.jsx';
-import PostWritePage from './pages/internal/PostWritePage.jsx';
 import MembershipStatusPage from './pages/status/MembershipStatusPage.jsx';
 import AdminRoute from './routes/AdminRoute.jsx';
 import ProtectedRoute from './routes/ProtectedRoute.jsx';
+
+const PostWritePage = lazy(() => import('./pages/internal/PostWritePage.jsx'));
+
+function EditorRoute() {
+  return <Suspense fallback={<p className="gw-empty-state" role="status">게시글 편집기를 불러오고 있습니다.</p>}><PostWritePage /></Suspense>;
+}
 
 export default function App() {
   return (
@@ -48,8 +54,8 @@ export default function App() {
               <Route path="boards" element={<BoardsPage />} />
               <Route path="boards/:boardSlug" element={<BoardPage />} />
               <Route path="boards/:boardSlug/posts/:postId" element={<PostDetailPage />} />
-              <Route path="boards/:boardSlug/posts/:postId/edit" element={<PostWritePage />} />
-              <Route path="boards/:boardSlug/write" element={<PostWritePage />} />
+              <Route path="boards/:boardSlug/posts/:postId/edit" element={<EditorRoute />} />
+              <Route path="boards/:boardSlug/write" element={<EditorRoute />} />
               <Route path="approval" element={<ApprovalPage />} />
               <Route path="calendar" element={<CalendarPage />} />
               <Route path="files" element={<FilesPage />} />
