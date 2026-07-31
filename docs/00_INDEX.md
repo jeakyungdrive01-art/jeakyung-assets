@@ -40,3 +40,12 @@
 - 구현: Supabase Auth 클라이언트, 가입·로그인·로그아웃·비밀번호 복구, 회원 상태 보호 경로, 관리자 승인·거절, 부서·직급·직책, 고정 역할, RLS·RPC·감사 로그 마이그레이션.
 - 실연결 대기: Supabase 프로젝트 값, 마이그레이션 적용, 최초 최고 관리자 부트스트랩, Preview 환경 변수와 실제 인증·RLS 통합 검증.
 - 미구현: 게시판·위젯 빌더, 전자결재, 일정, 파일, 실제 메일 연동과 Auth Admin API.
+
+## 프로젝트 운영·인수인계
+
+- [프로젝트 관리 문서 시작점](./90_PROJECT_MANAGEMENT/00_INDEX.md)
+- [현재 개발 상태](./90_PROJECT_MANAGEMENT/02_CURRENT_STATUS.md)
+- [전체 개발 계획](./90_PROJECT_MANAGEMENT/03_MASTER_PLAN.md)
+- [결정 사항과 변경 금지 규칙](./90_PROJECT_MANAGEMENT/04_DECISIONS_AND_GUARDRAILS.md)
+- [진행 로그](./90_PROJECT_MANAGEMENT/05_PROGRESS_LOG.md)
+- [작업자 핵심 지시](./90_PROJECT_MANAGEMENT/06_WORK_INSTRUCTION_CORE.md)
