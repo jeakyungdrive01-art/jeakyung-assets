@@ -2,27 +2,108 @@
 
 [문서 목록](./00_INDEX.md) · [현재 상태](./02_CURRENT_STATUS.md) · [전체 계획](./03_MASTER_PLAN.md)
 
-상태: **지시서 준비 완료, 실제 착수 미확인**
+상태: **G4-1 보안 기반 및 결재함 구현 완료, 로컬 마이그레이션 검증 완료**
 
-## 시작 기준
+## 현재 기준
 
-기준 브랜치:
-
-```text
-groupware/dashboard-boards
-```
-
-기준 HEAD:
-
-```text
-25f47d13def530f65d5641ad6389a34753d90b88
-```
-
-새 브랜치:
+현재 브랜치:
 
 ```text
 groupware/approval
 ```
+
+현재 HEAD:
+
+```text
+b10fac9 fix(groupware): align delegated approval document access
+```
+
+직전 기능 커밋:
+
+```text
+779084e feat(groupware): secure approval inbox and policies
+```
+
+기준 상태:
+
+- 원격 `origin/groupware/approval`과 동기화 완료
+- `main` 미변경
+- Supabase 원격 미적용
+- Vercel Preview 미배포
+- Production 미변경
+
+## G4-1 완료 범위
+
+### 데이터 기반
+
+작성 완료:
+
+```text
+202607310008_groupware_approval_core.sql
+202607310009_groupware_approval_notifications_storage.sql
+202607310010_groupware_approval_security_logic.sql
+202607310011_groupware_approval_rls_inbox.sql
+```
+
+포함 영역:
+
+- 결재 분류
+- 결재 양식
+- 양식 버전
+- 문서번호 시퀀스
+- 결재 문서
+- 문서 Revision
+- 결재 단계
+- 단계별 결재자
+- 결재 처리 이력
+- 참조·열람
+- 의견
+- 첨부파일
+- 대결·위임
+- 전결 규칙
+- 개인 저장 결재선
+- 내부 알림 기반
+- 비공개 Storage 기반
+
+### 결재함
+
+완료:
+
+- 서버 RPC 기반 결재함
+- 직접 배정 문서 조회
+- 유효한 위임 문서 조회
+- 진행 중 및 보류 문서 조회
+- 활성 결재 단계 조회
+- 결재자 상태 조회
+- 위임 여부 표시
+- 기안자 이름 표시
+- 문서번호 미발급 처리
+- 로딩·빈 상태·오류·재시도 UI
+
+### 보안
+
+완료:
+
+- 승인된 회원만 전자결재 기본 데이터 조회
+- 관리자 비활성·보관 양식 조회 허용
+- 문서 참여자 기반 열람 정책
+- 문서 하위 엔터티의 문서 권한 상속
+- 기안자 수정 가능 상태 제한
+- 함수 실행 권한 제한
+- 위임 결재함과 문서 상세 접근 규칙 통일
+- 위임 기간·상태·범위 검증
+- `SECURITY DEFINER` 함수의 명시적 `search_path`
+- 관련 함수의 RLS 재귀 방지 설정
+
+### 검증
+
+완료:
+
+- `npx supabase db reset`
+- 전체 마이그레이션 `001`부터 `011` 적용
+- Vite Production build
+- `git diff --check`
+- 원격 브랜치 Push
 
 ## 목표
 
@@ -167,14 +248,18 @@ groupware-approval-attachments
 - 다른 문서 attachment ID 도용 차단
 - soft delete와 고아 파일 후보
 
-## 권장 마이그레이션
+## 마이그레이션
+
+현재 작성된 파일:
 
 ```text
 202607310008_groupware_approval_core.sql
 202607310009_groupware_approval_notifications_storage.sql
+202607310010_groupware_approval_security_logic.sql
+202607310011_groupware_approval_rls_inbox.sql
 ```
 
-번호가 이미 사용되었으면 현재 원격 최신 번호 다음으로 조정한다.
+원격 적용은 아직 하지 않았다.
 
 ## 주요 E2E
 
@@ -193,6 +278,53 @@ groupware-approval-attachments
 - 첨부 직접 접근 차단
 - 알림 타인 접근 차단
 
+## G4-2 다음 검증 순서
+
+### 1. 직접 결재자 시나리오
+
+- 기안자 문서 생성
+- 문서 제출
+- 첫 결재 단계 활성화
+- 지정 결재자 결재함 노출
+- 지정 결재자 문서 상세 접근
+- 비지정 사용자 결재함 미노출
+- 비지정 사용자 직접 URL 차단
+
+### 2. 위임 결재자 시나리오
+
+- 전체 범위 위임
+- 특정 양식 위임
+- 특정 부서 위임
+- 시작 전 위임 미적용
+- 유효 기간 내 위임 적용
+- 종료 후 위임 미적용
+- 취소된 위임 미적용
+- 위임받은 사용자의 결재함 노출
+- 위임받은 사용자의 문서 상세 접근
+- 원 결재자와 실제 처리자 기록
+
+### 3. 참조·열람 시나리오
+
+- 참조자 문서 조회
+- 열람자 문서 조회
+- 관계없는 사용자 직접 URL 차단
+- 읽음 시각 기록
+- 읽지 않은 참조 개수
+- 참조·열람함 전용 RPC
+
+### 4. 다음 구현
+
+- 실제 대결·위임 관리 화면
+- 위임 생성·수정·취소 RPC
+- 순환 위임 차단
+- 중복 기간 위임 검증
+- 기안 생성 트랜잭션 RPC
+- 승인·반려·보류·회수 처리 RPC
+- 양식 빌더
+- 양식 버전 발행
+- 첨부파일 업로드
+- 내부 알림
+
 ## 제외
 
 - 메일 발송
@@ -204,13 +336,27 @@ groupware-approval-attachments
 - 공인전자서명 주장
 - Production과 도메인
 
-## 현재 착수 장애
+## 현재 제한 및 승인 대기 항목
 
-최근 Gemini 3.1 Pro Preview 호출은 HTTP 429로 실패했다.
+현재 G4 착수 장애는 없다.
 
-```text
-Quota exceeded
-free tier limit: 0
-```
+G4-1 보안 기반과 로컬 마이그레이션 검증은 완료됐다. 다음 단계는 실제 테스트 데이터를 사용한 권한 및 결재 흐름 검증이다.
 
-새 작업자는 사용 가능한 모델로 전환한 뒤 G4 지시를 다시 제출해야 한다. 동일 메시지 재전송만으로는 해결되지 않을 수 있다.
+사용자 승인 전에는 다음 작업을 진행하지 않는다.
+
+- Supabase 원격 마이그레이션 적용
+- Vercel Preview 배포
+- Production 배포
+- PR 생성
+- `main` 병합
+- 공개 홈페이지 변경
+- 도메인·DNS·CNAME 변경
+
+원격 적용 전 필수 조건:
+
+- 직접 결재자 시나리오 통과
+- 위임 결재자 시나리오 통과
+- 권한 없는 사용자 접근 차단 확인
+- 참조·열람 권한 설계 확정
+- 마이그레이션 재실행 가능성 확인
+- 프런트엔드 회귀 검사 통과

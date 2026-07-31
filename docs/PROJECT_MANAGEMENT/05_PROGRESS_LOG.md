@@ -177,7 +177,7 @@ https://jeakyung-preview-9jp65p8q0-3372.vercel.app
 - 대시보드 연동
 - 관리자 결재 시스템
 
-실제 착수 전 모델 오류 발생:
+초기 착수 전 모델 오류:
 
 ```text
 Gemini 3.1 Pro Preview
@@ -190,7 +190,7 @@ free tier limit: 0
 
 - 코드나 저장소 문제 아님
 - 모델/API 프로젝트의 무료 할당량 또는 결제 설정 문제
-- 사용 가능한 Codex 또는 다른 정상 모델에서 동일 G4 지시로 재개해야 함
+- 이후 사용 가능한 환경에서 G4 개발 재개
 
 ## 2026-07-31 — Phase G4-1 전자결재 보안 기반 및 결재함
 
@@ -198,6 +198,124 @@ free tier limit: 0
 
 ```text
 groupware/approval
+```
+
+기능 커밋:
+
+```text
+779084e feat(groupware): secure approval inbox and policies
+```
+
+위임 접근 보완 커밋:
+
+```text
+b10fac9 fix(groupware): align delegated approval document access
+```
+
+원격 Push:
+
+```text
+779084e..b10fac9  groupware/approval -> groupware/approval
+```
+
+변경 파일:
+
+```text
+src/groupware/pages/internal/ApprovalListPage.jsx
+src/groupware/pages/internal/ApprovalDelegationsPage.jsx
+src/groupware/services/approvalService.js
+supabase/migrations/202607310011_groupware_approval_rls_inbox.sql
+```
+
+관련 마이그레이션:
+
+```text
+202607310008_groupware_approval_core.sql
+202607310009_groupware_approval_notifications_storage.sql
+202607310010_groupware_approval_security_logic.sql
+202607310011_groupware_approval_rls_inbox.sql
+```
+
+완료 기능:
+
+- 결재함 조회를 서버 RPC 방식으로 전환
+- `get_my_approval_inbox()` 구현
+- 로딩·빈 상태·오류·재시도 UI 처리
+- 결재 문서번호 미발급 표시
+- 상태값 한글 표시
+- 위임 문서 배지 표시
+- 오래된 `supabase.auth.user()` 제거
+- `supabase.auth.getUser()` 적용
+- 누락된 `ApprovalDelegationsPage` 추가
+- 전자결재 카테고리·양식·양식 버전 조회 정책 보강
+- 문서와 하위 엔터티 조회 RLS 보강
+- 기안자 수정 가능 상태 제한
+- 함수 실행 권한 제한
+- 결재함 RPC의 직접 배정 및 위임 결재 범위 처리
+
+보안 보완:
+
+- 위임받은 사용자가 결재함에서는 문서를 확인하지만 상세 문서 RLS에서 차단될 수 있는 불일치 발견
+- `has_active_approval_delegation()` 공통 함수 추가
+- 결재함 RPC와 문서 RLS가 같은 위임 범위 판정 사용
+- `all`, `template`, `department` 범위 반영
+- 위임 유효 기간과 상태 검증
+- `SECURITY DEFINER` 함수에 `search_path = pg_catalog` 적용
+- 관련 함수에 `row_security = off` 명시
+- `public` 실행 권한 회수
+- `authenticated` 역할에만 실행 권한 부여
+
+로컬 Supabase 검증:
+
+```text
+npx supabase start --debug
+npx supabase db reset
+```
+
+결과:
+
+- Supabase 로컬 개발 환경 시작 성공
+- 전체 마이그레이션 `001`부터 `011`까지 적용 성공
+- `202607310011_groupware_approval_rls_inbox.sql` 적용 성공
+- 컨테이너 재시작 성공
+- `Finished supabase db reset on branch groupware/approval` 확인
+- `supabase/seed.sql` 미존재 경고 외 오류 없음
+
+프런트엔드 검증:
+
+```text
+npm run build
+git diff --check
+```
+
+결과:
+
+- Vite Production build 성공
+- 206개 모듈 변환 성공
+- `git diff --check` 오류 없음
+- 로컬 HEAD와 `origin/groupware/approval` 동기화 확인
+
+미적용:
+
+- Supabase 원격 마이그레이션
+- Vercel Preview 배포
+- Production 배포
+- PR 생성
+- `main` 병합
+- 도메인·DNS·CNAME 변경
+
+남은 항목:
+
+- 실제 직접 결재자 데이터 테스트
+- 실제 위임 결재자 데이터 테스트
+- 위임 문서 상세 접근 테스트
+- 권한 없는 사용자 직접 URL 차단 테스트
+- 참조·열람함 전용 조회
+- 실제 대결·위임 관리 기능
+- 기안 생성 트랜잭션 RPC
+- 승인·반려·보류·회수 처리
+- 양식 빌더 및 양식 버전 발행
+- 첨부파일 및 내부 알림 연동
 
 ## 다음 로그 작성 규칙
 
