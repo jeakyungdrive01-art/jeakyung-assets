@@ -45,6 +45,51 @@ using (
   )
 );
 
+-- 결재함 RPC와 문서 RLS가 동일한 위임 범위 규칙을 사용한다.
+create or replace function public.has_active_approval_delegation(
+  p_assigned_user_id uuid,
+  p_document_id uuid
+)
+returns boolean
+language sql
+stable
+security definer
+set search_path = pg_catalog
+set row_security = off
+as $$
+  select
+    auth.uid() is not null
+    and exists (
+      select 1
+      from public.approval_documents d
+      join public.approval_delegations dg
+        on dg.delegator_user_id = p_assigned_user_id
+       and dg.delegate_user_id = auth.uid()
+      where d.id = p_document_id
+        and dg.status in ('scheduled', 'active')
+        and now() between dg.starts_at and dg.ends_at
+        and (
+          dg.scope_type = 'all'
+          or (
+            dg.scope_type = 'template'
+            and dg.template_id = d.template_id
+          )
+          or (
+            dg.scope_type = 'department'
+            and dg.department_id = d.drafter_department_id
+          )
+        )
+    );
+$$;
+
+revoke all
+on function public.has_active_approval_delegation(uuid, uuid)
+from public;
+
+grant execute
+on function public.has_active_approval_delegation(uuid, uuid)
+to authenticated;
+
 create or replace function public.can_view_approval_document(
   p_document_id uuid
 )
@@ -53,6 +98,7 @@ language sql
 stable
 security definer
 set search_path = pg_catalog
+set row_security = off
 as $$
   select
     public.is_approved_member()
@@ -72,6 +118,10 @@ as $$
               and (
                 a.assigned_user_id = auth.uid()
                 or a.delegated_from_user_id = auth.uid()
+                or public.has_active_approval_delegation(
+                  a.assigned_user_id,
+                  d.id
+                )
               )
           )
 
@@ -229,6 +279,7 @@ language sql
 stable
 security definer
 set search_path = pg_catalog
+set row_security = off
 as $$
   select
     d.id,
@@ -267,26 +318,9 @@ as $$
     and (
       a.assigned_user_id = auth.uid()
 
-      or exists (
-        select 1
-        from public.approval_delegations dg
-        where dg.delegator_user_id = a.assigned_user_id
-          and dg.delegate_user_id = auth.uid()
-          and dg.status in ('scheduled', 'active')
-          and now() between dg.starts_at and dg.ends_at
-          and (
-            dg.scope_type = 'all'
-
-            or (
-              dg.scope_type = 'template'
-              and dg.template_id = d.template_id
-            )
-
-            or (
-              dg.scope_type = 'department'
-              and dg.department_id = d.drafter_department_id
-            )
-          )
+      or public.has_active_approval_delegation(
+        a.assigned_user_id,
+        d.id
       )
     )
   order by
