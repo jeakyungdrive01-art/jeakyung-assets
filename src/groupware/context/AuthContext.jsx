@@ -8,7 +8,7 @@ import {
   signUpMembership,
   updatePassword,
 } from '../services/authService.js';
-import { getIdentity } from '../services/membershipService.js';
+import { getIdentity, setMyActiveRole } from '../services/membershipService.js';
 
 const EMPTY_AUTH = Object.freeze({
   configured: false,
@@ -18,6 +18,8 @@ const EMPTY_AUTH = Object.freeze({
   user: null,
   profile: null,
   roles: [],
+  assignedRoles: [],
+  activeRole: null,
   permissions: [],
   recoveryMode: false,
   error: null,
@@ -25,9 +27,9 @@ const EMPTY_AUTH = Object.freeze({
 
 const AuthContext = createContext(EMPTY_AUTH);
 
-function toPermissions(roles) {
+function toPermissions(activeRole) {
   const permissions = [];
-  if (roles.includes('admin') || roles.includes('super_admin')) permissions.push('admin.access');
+  if (activeRole === 'admin' || activeRole === 'super_admin') permissions.push('admin.access');
   return permissions;
 }
 
@@ -51,7 +53,7 @@ export function AuthProvider({ children }) {
         recoveryMode: current.recoveryMode,
         status: current.configured ? 'anonymous' : 'unconfigured',
       }));
-      return { profile: null, roles: [] };
+      return { profile: null, roles: [], activeRole: null };
     }
 
     const sessionKey = `${nextSession.user.id}:${nextSession.access_token}`;
@@ -65,12 +67,14 @@ export function AuthProvider({ children }) {
     setAuthState((current) => ({ ...current, loading: true, session: nextSession, user: nextSession.user, error: null }));
 
     try {
-      const identityPromise = getIdentity(nextSession.user.id);
+      const identityPromise = getIdentity();
       identityCache.current = { key: sessionKey, identity: null, promise: identityPromise };
       const identity = await identityPromise;
       identityCache.current = { key: sessionKey, identity, promise: null };
       if (sequence !== requestSequence.current) return identity;
-      const status = identity.profile?.membership_status ?? 'profile-missing';
+      const status = identity.profile?.employment_status === 'resigned'
+        ? 'resigned'
+        : identity.profile?.membership_status ?? 'profile-missing';
       setAuthState((current) => ({
         ...current,
         loading: false,
@@ -78,8 +82,10 @@ export function AuthProvider({ children }) {
         session: nextSession,
         user: nextSession.user,
         profile: identity.profile,
-        roles: identity.roles,
-        permissions: toPermissions(identity.roles),
+        roles: identity.roles.map((role) => role.code),
+        assignedRoles: identity.roles,
+        activeRole: identity.activeRole,
+        permissions: toPermissions(identity.activeRole),
         error: null,
       }));
       return identity;
@@ -94,6 +100,8 @@ export function AuthProvider({ children }) {
           user: nextSession.user,
           profile: null,
           roles: [],
+          assignedRoles: [],
+          activeRole: null,
           permissions: [],
           error,
         }));
@@ -152,6 +160,11 @@ export function AuthProvider({ children }) {
       return result;
     },
     refresh: () => applySession(authState.session, { force: true }),
+    async switchRole(roleCode) {
+      await setMyActiveRole(roleCode);
+      identityCache.current = { key: null, identity: null, promise: null };
+      return applySession(authState.session, { force: true });
+    },
   }), [applySession, authState.session]);
 
   const contextValue = useMemo(() => ({ ...authState, ...actions }), [actions, authState]);

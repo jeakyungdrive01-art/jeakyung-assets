@@ -15,6 +15,10 @@ export async function signUpMembership({
   requestedDepartmentId,
   requestedPositionId,
   requestedJobTitleId,
+  requestedHireDate,
+  requestedEmployeeNumber,
+  organizationRequestNote,
+  profilePhotoUploadToken,
 }) {
   const client = requireSupabase();
   const { data, error } = await client.auth.signUp({
@@ -27,6 +31,10 @@ export async function signUpMembership({
         requested_department_id: requestedDepartmentId,
         requested_position_id: requestedPositionId,
         requested_job_title_id: requestedJobTitleId,
+        requested_hire_date: requestedHireDate || null,
+        requested_employee_number: requestedEmployeeNumber || null,
+        organization_request_note: organizationRequestNote || null,
+        profile_photo_upload_token: profilePhotoUploadToken || null,
       },
     },
   });

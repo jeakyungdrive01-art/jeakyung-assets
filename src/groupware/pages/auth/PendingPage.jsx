@@ -34,6 +34,11 @@ export default function PendingPage() {
           가입 신청이 접수되었습니다. 이메일 확인이 설정된 경우 받은 편지함의 인증 링크도 확인해 주세요.
         </div>
       )}
+      {location.state?.photoUploadFailed && (
+        <div className="gw-notice gw-notice--warning" role="status">
+          가입 신청은 접수됐지만 프로필 사진은 등록되지 않았습니다. 승인 후 내 프로필에서 다시 등록할 수 있습니다.
+        </div>
+      )}
       <ol className="gw-status-steps">
         <li><span>1</span><div><strong>신청 정보 확인</strong><p>관리자가 회사 이메일과 소속 정보를 확인합니다.</p></div></li>
         <li><span>2</span><div><strong>승인 또는 보완 안내</strong><p>승인 결과와 필요한 안내는 향후 인증 시스템에서 제공합니다.</p></div></li>

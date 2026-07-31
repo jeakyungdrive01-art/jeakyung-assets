@@ -2,10 +2,13 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 
 import { getMyDashboardWidgets, setDashboardPreference } from '../../services/dashboardService.js';
+import ProfileCard from '../../components/profile/ProfileCard.jsx';
+import { useAuth } from '../../context/AuthContext.jsx';
 
 const PREPARING = new Set(['approval_status', 'today_schedule', 'week_schedule']);
 
 export default function DashboardPage() {
+  const auth = useAuth();
   const [widgets, setWidgets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -16,7 +19,7 @@ export default function DashboardPage() {
     finally { setLoading(false); }
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(); }, [auth.activeRole]);
 
   const hide = async (widget) => {
     await setDashboardPreference(widget.id, { customOrder: widget.display_order, isHidden: true });
@@ -43,6 +46,7 @@ export default function DashboardPage() {
   return (
     <article className="gw-page" aria-labelledby="page-title">
       <header className="gw-page-header"><div><span className="gw-eyebrow">WORKSPACE</span><h1 id="page-title">대시보드</h1><p>관리자가 배포한 업무 위젯을 내 순서와 표시 설정으로 확인합니다.</p></div><span className="gw-phase-badge">G3 동적 위젯</span></header>
+      <ProfileCard />
       {error && <div className="gw-notice gw-notice--warning" role="alert">{error}</div>}
       {loading ? <p className="gw-empty-state" role="status">위젯을 불러오고 있습니다.</p> : (
         <div className="gw-dashboard-grid">

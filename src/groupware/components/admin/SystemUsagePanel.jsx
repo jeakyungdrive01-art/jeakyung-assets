@@ -10,6 +10,7 @@ const EMPTY_USAGE = {
   attachments: {},
   boards: [],
   activity: {},
+  file_details: { largest_file: null, cleanup_candidates: [] },
 };
 
 const number = (value) => new Intl.NumberFormat('ko-KR').format(Number(value) || 0);
@@ -52,6 +53,7 @@ export default function SystemUsagePanel({ loadUsage = getAdminSystemUsage }) {
   useEffect(() => { load(); }, [load]);
 
   const { members, content, attachments, dashboards, activity, boards } = usage;
+  const fileDetails = usage.file_details ?? EMPTY_USAGE.file_details;
   const generatedAt = usage.generated_at
     ? new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(usage.generated_at))
     : '집계 전';
@@ -84,6 +86,7 @@ export default function SystemUsagePanel({ loadUsage = getAdminSystemUsage }) {
             <UsageMetric label="활성 첨부 용량" value={bytes(attachments.active_bytes)} detail={`본문 이미지 ${number(attachments.inline_images)}장 · 일반 첨부 ${number(attachments.general_files)}개`} />
             <UsageMetric label="정리 대기" value={`${number(attachments.cleanup_candidates)}개`} detail={`${bytes(attachments.cleanup_bytes)} · 기한 도래 ${number(attachments.due_cleanup_count)}개`} tone={Number(attachments.due_cleanup_count) > 0 ? 'warning' : ''} />
             <UsageMetric label="Storage 객체" value={`${number(attachments.object_count)}개`} detail={`${bytes(attachments.object_bytes)} · 미등록 ${number(attachments.orphan_object_count)}개`} tone={Number(attachments.orphan_object_count) > 0 ? 'warning' : ''} />
+            <UsageMetric label="가장 큰 파일" value={fileDetails.largest_file ? bytes(fileDetails.largest_file.file_size) : '없음'} detail={fileDetails.largest_file ? `${fileDetails.largest_file.board_name} · ${fileDetails.largest_file.original_name}` : '등록된 첨부파일 없음'} />
           </div>
 
           <div className="gw-usage-summary-grid">
@@ -150,6 +153,7 @@ export default function SystemUsagePanel({ loadUsage = getAdminSystemUsage }) {
           <p className="gw-usage-retention-note">
             정리 후보는 최소 24시간의 복구 유예를 거칩니다. 이 화면에서는 물리 삭제하지 않으며, 미등록 Storage 객체와 기한 도래 항목은 운영 점검 대상으로만 표시합니다.
           </p>
+          {fileDetails.cleanup_candidates.length > 0 && <section className="gw-usage-cleanup-list" aria-labelledby="cleanup-candidate-title"><h3 id="cleanup-candidate-title">정리 후보 파일</h3><ul>{fileDetails.cleanup_candidates.map((item) => <li key={item.id}><span><strong>{item.original_name}</strong><small>{item.board_name} · {item.purpose}</small></span><b>{bytes(item.file_size)}</b><time>{item.cleanup_after ? new Date(item.cleanup_after).toLocaleString('ko-KR') : '정리 시각 미정'}</time></li>)}</ul></section>}
         </>
       )}
     </section>

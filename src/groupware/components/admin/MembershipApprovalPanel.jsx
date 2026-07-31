@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import FormStatus from '../FormStatus.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { approveMembership, listPendingMemberships, rejectMembership } from '../../services/membershipService.js';
+import ProfileAvatar from '../profile/ProfileAvatar.jsx';
 
 function formatDate(value) {
   if (!value) return '-';
@@ -19,20 +20,22 @@ function MemberReviewCard({ member, directory, onCompleted }) {
   const [positionId, setPositionId] = useState(member.requested_position?.id ?? '');
   const [jobTitleId, setJobTitleId] = useState(member.requested_job_title?.id ?? '');
   const [roleCode, setRoleCode] = useState('employee');
+  const [hireDate, setHireDate] = useState(member.requested_hire_date ?? '');
+  const [employeeNumber, setEmployeeNumber] = useState(member.requested_employee_number ?? '');
   const [reason, setReason] = useState('');
   const [busyAction, setBusyAction] = useState('');
   const [message, setMessage] = useState('');
 
   const handleApprove = async () => {
     if (busyAction) return;
-    if (!departmentId || !positionId || !jobTitleId || !roleCode) {
-      setMessage('최종 부서·직급·직책·역할을 모두 선택해 주세요.');
+    if (!departmentId || !positionId || !jobTitleId || !roleCode || !hireDate || !employeeNumber.trim()) {
+      setMessage('최종 부서·직급·직책·입사일·사번·역할을 모두 입력해 주세요.');
       return;
     }
     setBusyAction('approve');
     setMessage('');
     try {
-      await approveMembership({ userId: member.id, departmentId, positionId, jobTitleId, roleCode });
+      await approveMembership({ userId: member.id, departmentId, positionId, jobTitleId, roleCode, hireDate, employeeNumber });
       onCompleted(member.id, `${member.name}님의 가입을 승인했습니다.`);
     } catch {
       setMessage('가입 승인에 실패했습니다. 권한과 현재 회원 상태를 확인해 주세요.');
@@ -60,10 +63,13 @@ function MemberReviewCard({ member, directory, onCompleted }) {
   return (
     <article className="gw-review-card" aria-labelledby={`${prefix}-title`}>
       <header className="gw-review-card-header">
-        <div>
+        <div className="gw-review-member-identity">
+          <ProfileAvatar profile={{ ...member, display_name: member.full_name || member.name }} />
+          <div>
           <span className="gw-eyebrow">PENDING MEMBER</span>
           <h3 id={`${prefix}-title`}>{member.name}</h3>
           <p>{member.email} · {member.phone || '연락처 미입력'}</p>
+          </div>
         </div>
         <time dateTime={member.created_at}>{formatDate(member.created_at)} 신청</time>
       </header>
@@ -72,6 +78,9 @@ function MemberReviewCard({ member, directory, onCompleted }) {
         <div><dt>요청 부서</dt><dd>{member.requested_department?.name ?? '[미정]'}</dd></div>
         <div><dt>요청 직급</dt><dd>{member.requested_position?.name ?? '[미정]'}</dd></div>
         <div><dt>요청 직책</dt><dd>{member.requested_job_title?.name ?? '[미정]'}</dd></div>
+        <div><dt>요청 입사일</dt><dd>{member.requested_hire_date ?? '[미정]'}</dd></div>
+        <div><dt>요청 사번</dt><dd>{member.requested_employee_number ?? '[미정]'}</dd></div>
+        <div><dt>관리자 확인 메모</dt><dd>{member.organization_request_note ?? '없음'}</dd></div>
       </dl>
 
       <div className="gw-admin-form-grid">
@@ -81,6 +90,14 @@ function MemberReviewCard({ member, directory, onCompleted }) {
             <option value="">선택</option>
             {directory.departments.filter((item) => item.is_active).map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
           </select>
+        </div>
+        <div className="gw-field">
+          <label htmlFor={`${prefix}-hire-date`}>최종 입사일</label>
+          <input id={`${prefix}-hire-date`} type="date" value={hireDate} onChange={(event) => setHireDate(event.target.value)} />
+        </div>
+        <div className="gw-field">
+          <label htmlFor={`${prefix}-employee-number`}>최종 사번</label>
+          <input id={`${prefix}-employee-number`} value={employeeNumber} onChange={(event) => setEmployeeNumber(event.target.value)} maxLength="60" />
         </div>
         <div className="gw-field">
           <label htmlFor={`${prefix}-position`}>최종 직급</label>
@@ -144,7 +161,7 @@ export default function MembershipApprovalPanel({ directory }) {
     setError('');
   };
 
-  const allowedRoles = auth.roles.includes('super_admin')
+  const allowedRoles = auth.activeRole === 'super_admin'
     ? directory.roles
     : directory.roles.filter((role) => !['super_admin', 'admin'].includes(role.code));
 

@@ -11,5 +11,6 @@ export const GROUPWARE_NAVIGATION = [
 
 export function getRouteTitle(pathname) {
   if (pathname.startsWith('/boards/')) return '게시판';
+  if (pathname === '/profile' || pathname === '/mypage') return '내 프로필';
   return GROUPWARE_NAVIGATION.find((item) => pathname === item.path)?.label ?? '그룹웨어';
 }

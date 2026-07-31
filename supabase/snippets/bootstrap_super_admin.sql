@@ -32,13 +32,22 @@ begin
       approved_by = bootstrap_user_id,
       rejection_reason = null,
       locked_at = null,
-      resigned_at = null
+      resigned_at = null,
+      employment_status = 'active',
+      preferred_start_role = 'super_admin'
   where id = bootstrap_user_id
   returning * into after_profile;
 
-  insert into public.user_role_assignments (user_id, role_code, assigned_by)
-  values (bootstrap_user_id, 'super_admin', bootstrap_user_id)
-  on conflict (user_id, role_code) do nothing;
+  insert into public.user_role_assignments (user_id, role_code, assigned_by, is_active, revoked_at)
+  values
+    (bootstrap_user_id, 'super_admin', bootstrap_user_id, true, null),
+    (bootstrap_user_id, 'employee', bootstrap_user_id, true, null)
+  on conflict (user_id, role_code) do update
+  set is_active=true,revoked_at=null,updated_at=now();
+
+  insert into public.user_active_roles(user_id,active_role_code,updated_at)
+  values(bootstrap_user_id,'super_admin',now())
+  on conflict(user_id) do update set active_role_code='super_admin',updated_at=now();
 
   insert into public.audit_logs (
     actor_user_id,

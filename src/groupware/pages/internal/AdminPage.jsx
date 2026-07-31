@@ -5,6 +5,7 @@ import OrganizationManagementPanel from '../../components/admin/OrganizationMana
 import BoardBuilderPanel from '../../components/admin/BoardBuilderPanel.jsx';
 import DashboardWidgetPanel from '../../components/admin/DashboardWidgetPanel.jsx';
 import SystemUsagePanel from '../../components/admin/SystemUsagePanel.jsx';
+import EmployeeProfilePanel from '../../components/admin/EmployeeProfilePanel.jsx';
 import { getOrganizationDirectory } from '../../services/organizationService.js';
 
 const EMPTY_DIRECTORY = { departments: [], positions: [], jobTitles: [], roles: [] };
@@ -44,6 +45,7 @@ export default function AdminPage() {
         <>
           <SystemUsagePanel />
           <MembershipApprovalPanel directory={directory} />
+          <EmployeeProfilePanel directory={directory} />
           <OrganizationManagementPanel directory={directory} onReload={loadDirectory} />
           <DashboardWidgetPanel directory={directory} />
           <BoardBuilderPanel directory={directory} />

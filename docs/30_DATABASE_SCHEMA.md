@@ -62,3 +62,10 @@ Supabase PostgreSQL에 적용할 논리 모델이다. G2 스키마는 `supabase/
 - 감사 로그는 일반 관리자도 임의 수정·삭제할 수 없게 한다.
 
 RLS와 서버 함수 기준은 [`31_SECURITY_AND_RLS.md`](31_SECURITY_AND_RLS.md)를 따른다.
+
+## G3 보완 스키마
+
+- `202607310006_multi_roles_and_employee_profiles.sql`은 기존 `user_role_assignments`를 유지하면서 `is_active`, `revoked_at`, `updated_at`을 추가한다. 역할 변경 이력은 소프트 해제 상태와 `audit_logs`로 보존한다.
+- `user_active_roles`는 사용자별 서버 검증 활성 역할 하나를 저장한다. `profiles.preferred_start_role`은 현재 역할이 해제될 때 사용할 안전한 대체 역할이다.
+- `profiles`는 공식 이름, 표시 이름, 사번, 입사일, 회사·개인 업무 연락처, 재직 상태, 근무지, 소개, 프로필 사진 경로와 가입 신청용 확장 필드를 보유한다. 기존 `name`, `email`, `phone`은 호환 필드로 유지한다.
+- `profile_photo_files`는 비공개 Storage 객체의 소유자, MIME, 크기와 `active`·`cleanup_candidate` 수명주기를 기록한다. 이전 사진은 즉시 삭제하지 않는다.
