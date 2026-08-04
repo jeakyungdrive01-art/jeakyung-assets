@@ -340,21 +340,6 @@ p {
     transform: translateY(-2px);
 }
 
-.kakao-header-cta {
-    gap: 9px;
-    padding: 7px 17px 7px 9px;
-}
-
-.kakao-header-cta .kakao-icon {
-    width: 34px;
-    border-radius: 7px;
-}
-
-.kakao-header-cta:hover .kakao-icon,
-.kakao-header-cta:focus-visible .kakao-icon {
-    transform: rotate(-3deg) scale(1.06);
-}
-
 .menu-button {
     display: none;
     width: 44px;
@@ -436,11 +421,7 @@ p {
 
 .mobile-nav .mobile-nav-cta.kakao-cta {
     justify-content: flex-start;
-    padding: 10px 12px;
-}
-
-.mobile-nav .mobile-nav-cta .kakao-icon {
-    width: 42px;
+    padding: 10px 12px 10px 20px;
 }
 
 /* Hero */
@@ -574,7 +555,7 @@ p {
 .kakao-cta {
     position: relative;
     isolation: isolate;
-    gap: 12px;
+    gap: 10px;
     overflow: hidden;
 }
 
@@ -594,27 +575,6 @@ p {
 .kakao-cta:hover::before,
 .kakao-cta:focus-visible::before {
     transform: translateX(720%) rotate(15deg);
-}
-
-.kakao-icon {
-    position: relative;
-    z-index: 1;
-    display: block;
-    flex: 0 0 auto;
-    width: 42px;
-    aspect-ratio: 3 / 2;
-    background: #fee500;
-    border-radius: 8px;
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18);
-    overflow: hidden;
-    transition: transform 0.3s var(--ease-out), box-shadow 0.3s;
-}
-
-.kakao-icon img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    transform: scale(1.65);
 }
 
 .kakao-cta-label,
@@ -642,12 +602,6 @@ p {
     transition: transform 0.3s var(--ease-out), background 0.3s, color 0.3s;
 }
 
-.kakao-cta:hover .kakao-icon,
-.kakao-cta:focus-visible .kakao-icon {
-    box-shadow: 0 9px 22px rgba(0, 0, 0, 0.24);
-    transform: translateY(-2px) rotate(-3deg) scale(1.04);
-}
-
 .kakao-cta:hover .kakao-cta-arrow,
 .kakao-cta:focus-visible .kakao-cta-arrow {
     color: var(--navy-900);
@@ -657,13 +611,36 @@ p {
 }
 
 .kakao-cta-primary {
-    min-width: 292px;
-    padding: 10px 15px 10px 11px;
+    min-width: 230px;
+    padding: 10px 14px 10px 20px;
 }
 
 .kakao-cta-hero {
-    min-width: 280px;
-    padding: 9px 14px 9px 10px;
+    min-width: 220px;
+    padding: 9px 13px 9px 20px;
+}
+
+.hero-actions .button {
+    gap: 10px;
+    min-width: 220px;
+    min-height: 58px;
+    padding: 9px 13px 9px 20px;
+    line-height: 1.2;
+}
+
+.hero-action-label {
+    flex: 1 1 auto;
+    text-align: left;
+    white-space: nowrap;
+}
+
+.hero-action-symbol {
+    display: grid;
+    place-items: center;
+    flex: 0 0 auto;
+    width: 32px;
+    height: 32px;
+    font-size: 16px;
 }
 
 .hero-index {
@@ -1939,14 +1916,14 @@ p {
     font-weight: 750;
 }
 
-/* Scroll reveal */
-.reveal {
+/* Scroll reveal: fallback content stays visible until React is ready. */
+.js.reveal-ready .reveal {
     opacity: 0;
     transform: translateY(26px);
     transition: opacity 0.8s var(--ease-out), transform 0.8s var(--ease-out);
 }
 
-.reveal.is-visible {
+.js.reveal-ready .reveal.is-visible {
     opacity: 1;
     transform: translateY(0);
 }
@@ -1974,6 +1951,27 @@ p {
 
 /* Tablet */
 @media (max-width: 1100px) {
+    html:not(.js) .site-header {
+        position: relative;
+        color: var(--ink-950);
+        background: var(--white);
+    }
+
+    html:not(.js) .site-header .header-brand .brand-core {
+        color: var(--navy-800);
+        text-shadow: none;
+    }
+
+    html:not(.js) .site-header .header-brand .brand-suffix {
+        color: var(--blue-600);
+        text-shadow: none;
+    }
+
+    html:not(.js) .mobile-nav[hidden] {
+        display: block;
+        height: auto;
+    }
+
     .desktop-nav,
     .header-cta {
         display: none;
@@ -1985,6 +1983,10 @@ p {
 
     .menu-button {
         display: block;
+    }
+
+    html:not(.js) .menu-button {
+        display: none;
     }
 
     .hero-inner {
@@ -2195,6 +2197,19 @@ p {
         overflow-wrap: break-word;
     }
 
+    .hero-copy h1,
+    .ceo-message h2,
+    .section-heading h2,
+    .audience-copy h2,
+    .statement h2,
+    .faq-heading h2,
+    .contact-copy h2,
+    .policy-hero h1 {
+        word-break: keep-all;
+        overflow-wrap: normal;
+        text-wrap: balance;
+    }
+
     .brand {
         font-size: 20px;
     }
@@ -2311,15 +2326,26 @@ p {
         padding: 10px 12px;
     }
 
-    .kakao-cta .kakao-icon {
-        width: 40px;
-    }
-
     .kakao-cta-label {
         font-size: 14px;
     }
 
     .kakao-cta-arrow {
+        width: 34px;
+        height: 34px;
+    }
+
+    .hero-actions .button {
+        min-height: 56px;
+        padding: 10px 12px 10px 20px;
+    }
+
+    .hero-actions .hero-action-label {
+        font-size: 15px;
+        line-height: 1.2;
+    }
+
+    .hero-actions .hero-action-symbol {
         width: 34px;
         height: 34px;
     }
@@ -2486,7 +2512,10 @@ p {
     }
 
     .statement h2 {
-        font-size: clamp(45px, 13vw, 62px);
+        font-size: clamp(29px, 9.2vw, 52px);
+        letter-spacing: -0.055em;
+        line-height: 1.08;
+        white-space: nowrap;
     }
 
     .statement-decoration {
@@ -2635,12 +2664,8 @@ p {
         display: none;
     }
 
-    .kakao-cta:hover .kakao-icon,
-    .kakao-cta:focus-visible .kakao-icon,
     .kakao-cta:hover .kakao-cta-arrow,
-    .kakao-cta:focus-visible .kakao-cta-arrow,
-    .kakao-header-cta:hover .kakao-icon,
-    .kakao-header-cta:focus-visible .kakao-icon {
+    .kakao-cta:focus-visible .kakao-cta-arrow {
         transform: none;
     }
 }

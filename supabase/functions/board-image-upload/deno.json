@@ -1,0 +1,6 @@
+{
+  "imports": {
+    "@imagemagick/magick-wasm": "npm:@imagemagick/magick-wasm@0.0.41",
+    "@supabase/server": "npm:@supabase/server@1.4.1"
+  }
+}

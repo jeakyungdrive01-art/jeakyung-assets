@@ -4,7 +4,7 @@
 
 이 문서는 재경닷컴 웹사이트의 기획, 디자인, 개발, 검수 기준을 정의한다. 웹사이트 개편 및 기능 확장 시 본 문서를 공통 기준으로 사용하며, 실제 사업 정보와 운영 정책이 확정되면 관련 내용을 갱신한다.
 
-현재 프로젝트는 별도 빌드 과정이 없는 HTML, CSS, JavaScript 기반 정적 사이트를 기준으로 한다.
+현재 프로젝트는 Vite + React 다중 페이지 방식의 공개 사이트(`/`, `/privacy/`)와 React Router 기반 그룹웨어 SPA(`/groupware/*`)를 분리해 운영하는 구조를 기준으로 한다.
 
 ## 2. 웹사이트 목적
 
@@ -222,6 +222,11 @@
   - PC와 모바일에서 동일한 통합 업무시스템 주소를 사용한다.
   - 새 창으로 열고 `noopener noreferrer`를 적용한다.
   - 로그인 정보나 토큰을 URL 또는 저장소에 포함하지 않는다.
+- React 전환 및 향후 그룹웨어 링크 계획:
+  - 공개 홈페이지의 React 전환과 새 그룹웨어 개발 기간에는 기존 URL `https://jeakyung.quv.kr`을 유지한다.
+  - 새 그룹웨어의 최종 예정 로그인 경로는 `/groupware/login`이다.
+  - 새 주소로의 변경은 그룹웨어 기능 완성, Preview 검수 및 운영 전환 승인을 모두 받은 이후에만 진행한다.
+  - 전환 승인 전에는 PC 헤더, 모바일 메뉴와 푸터의 기존 그룹웨어·메일 링크를 변경하지 않는다.
 - 예상 코드 적용 범위:
   - `index.html` 헤더, 모바일 메뉴 및 푸터
   - `css/style.css`
@@ -322,8 +327,9 @@
 ### 4.7.1 CHG-CONTACT-002 — 카카오 상담 CTA 이미지 및 인터랙션 강화
 
 - 요구사항 상태: Approved
-- 구현 상태: Implemented
+- 구현 상태: Superseded — `CHG-CONTACT-003`으로 대체
 - 요청일: 2026-07-29
+- 변경 이력: 사용자 확인 결과 이미지에 문제가 있어 2026-07-29부로 사이트 적용과 공개 자산 보관을 종료한다. 아래 내용은 이전 구현 기록으로만 유지한다.
 - 목적: 사용자가 카카오톡 상담 버튼을 빠르게 식별하고 클릭할 수 있도록 제공 이미지를 자연스럽게 배치하고 동적 피드백을 강화한다.
 - 연결 Asset ID: `AST-IMG-KAKAO-CTA-001`
 - 연결 Reference ID: `REF-IMG-KAKAO-CTA-001`
@@ -361,6 +367,38 @@
   - CTA 문구, 이미지와 화살표가 겹치거나 잘리지 않는다.
   - 마우스와 키보드 입력에서 동일한 동적 피드백을 확인할 수 있다.
   - 이미지 로딩 실패 시에도 텍스트로 상담 목적을 이해할 수 있다.
+
+### 4.7.2 CHG-CONTACT-003 — 빠른 상담 문구 통일 및 CTA 이미지 제거
+
+- 요구사항 상태: Approved
+- 구현 상태: Implemented
+- 요청일: 2026-07-29
+- 목적: 문제가 확인된 TALK 이미지를 제거하고, 상담 CTA를 이미지 의존성이 없는 명확한 텍스트 버튼으로 운영한다.
+- 문구 기준:
+  - 헤더, 모바일 메뉴, Hero와 하단 상담 영역의 대표 상담 문구를 `빠른 상담하기`로 통일한다.
+  - 접근성 이름에는 `빠른 상담하기`와 카카오톡 채널이 새 창에서 열린다는 정보를 함께 제공한다.
+- 링크 기준:
+  - 기존 상담 채널 `https://pf.kakao.com/_xgrFxhn`은 변경하지 않는다.
+  - 외부 링크에는 `target="_blank"`와 `rel="noopener noreferrer"`를 유지한다.
+- 이미지 제거:
+  - `AST-IMG-KAKAO-CTA-001`을 모든 HTML 마크업에서 제거한다.
+  - `public/images/kakao-talk-consultation.png`를 공개 자산에서 삭제하고 자산·참고 문서에는 폐기 이력만 남긴다.
+  - TALK 이미지 전용 CSS 선택자와 리사이징·호버 효과를 삭제한다.
+- 버튼 디자인 및 동작:
+  - 이미지 없이 텍스트와 원형 외부 링크 화살표로 정보 계층을 구성한다.
+  - 기존의 짧은 광택 효과와 화살표 이동 피드백은 유지한다.
+  - `prefers-reduced-motion` 환경에서는 광택과 화살표 이동을 제거한다.
+  - CSS 또는 이미지 로딩 상태와 무관하게 상담 문구와 링크 목적을 이해할 수 있어야 한다.
+- 반응형 기준:
+  - PC 헤더에서는 한 줄 문구를 유지한다.
+  - 모바일 메뉴와 Hero·하단 CTA에서는 버튼 너비 안에서 문구와 화살표가 겹치거나 잘리지 않아야 한다.
+  - 모든 기기에서 최소 44px 이상의 터치 영역을 유지한다.
+- 적용 위치: 메인 페이지와 개인정보처리방침 페이지의 PC 헤더·모바일 메뉴, 메인 Hero·하단 상담 CTA
+- 적용 파일: `index.html`, `privacy/index.html`, `css/style.css`, `docs/11_ASSET_MANIFEST.md`, `docs/12_REFERENCES.md`
+- 완료 조건:
+  - 공개 화면에 TALK 이미지와 `카카오톡 상담하기` 문구가 남지 않는다.
+  - 모든 대표 상담 CTA에 `빠른 상담하기`가 표시되고 기존 상담 채널이 정상적으로 열린다.
+  - 키보드 포커스와 모션 감소 환경에서도 링크를 명확하게 식별하고 사용할 수 있다.
 
 ### 4.8 CHG-LOCATION-001 — 소개 하단 찾아오시는 길
 
@@ -939,8 +977,37 @@ Change ID 단위로 구현 대기 항목과 완료 이력을 분리한다. 다�
 | `CHG-TYPO-003` | 파란 라벨 추가 확대와 컨설팅 CTA 강화 | Implemented | `index.html`, `css/style.css`, `WEBSITE_SPEC.md` | 반응형 글자 크기와 원형 화살표 동작 반영 |
 | `CHG-ICON-001` | 본문 서비스·이동 아이콘 확대 | Implemented | `css/style.css`, `WEBSITE_SPEC.md` | PC·모바일별 아이콘 크기와 간격 반영 |
 | `CHG-TYPO-004` | 소개·FAQ 대형 문구 축소 및 줄바꿈 안정화 | Implemented | `css/style.css`, `WEBSITE_SPEC.md` | 매체별 글자 크기·줄 높이·자간 반영 |
-| `CHG-CONTACT-002` | 카카오 TALK 이미지와 CTA 인터랙션 강화 | Implemented | `index.html`, `privacy/index.html`, `css/style.css`, 자산 문서 | 반응형 이미지·화살표·모션 접근성 반영 |
+| `CHG-CONTACT-002` | 카카오 TALK 이미지와 CTA 인터랙션 강화 | Superseded | 구현 이력 | `CHG-CONTACT-003`으로 대체 |
+| `CHG-CONTACT-003` | 빠른 상담 문구 통일 및 TALK 이미지 제거 | Implemented | `index.html`, `privacy/index.html`, `css/style.css`, 자산 문서 | 텍스트·원형 화살표 CTA와 기존 상담 링크 유지 |
 
 - 구현 완료일: 2026-07-29
 - 실제 화면의 브라우저·기기별 최종 시각 검수는 배포 전 별도로 진행한다.
 - 완료된 Change ID는 같은 요청을 다시 수행하지 않고 후속 변경이 있을 때 새 Change ID를 발급한다.
+
+## 15. 그룹웨어 G0–G1 기준
+
+### 15.1 목적과 경계
+
+- 그룹웨어는 재경닷컴 임직원 전용 업무 시스템이다.
+- 공개 사이트와 코드·스타일·라우팅 진입점을 분리한다.
+- G0–G1에서는 인증 UI, 보호 경로, App Shell과 내부 페이지 골격까지만 구현한다.
+- Supabase, 실제 회원 데이터, 게시판 CRUD, 전자결재·일정·파일 기능과 메일 연동은 후속 승인 전까지 구현하지 않는다.
+- 새 그룹웨어의 Preview 검수와 운영 전환 승인 전까지 공개 사이트의 `https://jeakyung.quv.kr` 링크를 유지한다.
+
+### 15.2 보안 원칙
+
+- 비로그인 사용자는 내부 페이지와 데이터를 사용할 수 없다.
+- 메뉴를 숨기는 것만으로 권한을 처리하지 않으며 최종 보안은 서버 권한 검증과 Supabase RLS를 사용한다.
+- `service_role` 키, 비밀번호, 토큰과 비밀정보는 브라우저 코드나 저장소에 포함하지 않는다.
+- 관리자, 삭제와 권한 변경은 서버 함수에서 처리하고 감사 로그를 남긴다.
+- G0–G1 보호 경로는 가짜 세션 없이 로그인 화면으로 이동한다.
+
+### 15.3 상세 기준 문서
+
+- 문서 색인: `docs/00_INDEX.md`
+- 반응형: `docs/21_RESPONSIVE_SYSTEM.md`
+- 경로·내비게이션: `docs/22_NAVIGATION_AND_LINKS.md`
+- 페이지 콘텐츠·흐름: `docs/23_PAGE_CONTENT_PLAN.md`, `docs/24_USER_FLOWS.md`
+- 인증·권한: `docs/27_AUTH_AND_MEMBERSHIP.md`, `docs/28_ROLE_AND_PERMISSION_MATRIX.md`
+- 게시판·데이터·보안: `docs/29_BOARD_SYSTEM.md`, `docs/30_DATABASE_SCHEMA.md`, `docs/31_SECURITY_AND_RLS.md`
+- 관리자·메일: `docs/32_ADMIN_SYSTEM.md`, `docs/33_MAIL_INTEGRATION.md`

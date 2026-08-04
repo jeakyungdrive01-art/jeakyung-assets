@@ -1,0 +1,60 @@
+import { requireSupabase } from '../lib/supabase.js';
+
+export async function getIdentity() {
+  const client = requireSupabase();
+  const { data, error } = await client.rpc('get_my_effective_access_context');
+  if (error) throw error;
+
+  return {
+    profile: data?.profile ?? null,
+    roles: data?.roles ?? [],
+    activeRole: data?.active_role ?? null,
+  };
+}
+
+export async function setMyActiveRole(roleCode) {
+  const { data, error } = await requireSupabase().rpc('set_my_active_role', { p_role_code: roleCode });
+  if (error) throw error;
+  return data;
+}
+
+export async function listPendingMemberships() {
+  const client = requireSupabase();
+  const { data, error } = await client
+    .from('profiles')
+    .select(`
+      id,name,full_name,email,phone,mobile_phone,membership_status,created_at,requested_hire_date,requested_employee_number,organization_request_note,profile_photo_path,
+      requested_department:departments!profiles_requested_department_id_fkey(id,name),
+      requested_position:positions!profiles_requested_position_id_fkey(id,name),
+      requested_job_title:job_titles!profiles_requested_job_title_id_fkey(id,name)
+    `)
+    .eq('membership_status', 'pending')
+    .order('created_at', { ascending: true });
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function approveMembership({ userId, departmentId, positionId, jobTitleId, roleCode, hireDate, employeeNumber }) {
+  const client = requireSupabase();
+  const { data, error } = await client.rpc('approve_membership', {
+    p_user_id: userId,
+    p_department_id: departmentId,
+    p_position_id: positionId,
+    p_job_title_id: jobTitleId,
+    p_role_code: roleCode,
+    p_hire_date: hireDate || null,
+    p_employee_number: employeeNumber || null,
+  });
+  if (error) throw error;
+  return data;
+}
+
+export async function rejectMembership({ userId, reason }) {
+  const client = requireSupabase();
+  const { data, error } = await client.rpc('reject_membership', {
+    p_user_id: userId,
+    p_reason: reason,
+  });
+  if (error) throw error;
+  return data;
+}

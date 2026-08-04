@@ -27,7 +27,7 @@
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | `AST-VID-HOME-HERO-001` | `public/videos/main_top.mp4` | MP4 영상 | 메인 Hero 배경 | `PAGE-HOME` | `SEC-HOME-HERO` | PC·태블릿·모바일 | 상업적 사용 가능 | 미최적화 | Applied |
 | `AST-IMG-ABOUT-CEO-001` | `public/images/ceo-yeom-dalseong.webp` | WebP 이미지 | 메인 소개 상단 대표 인사말 | `PAGE-HOME` | `SEC-ABOUT-GREETING` | PC·태블릿·모바일 | 상업적 사용 가능 | 원본 유지 | Applied |
-| `AST-IMG-KAKAO-CTA-001` | `public/images/kakao-talk-consultation.png` | PNG 이미지 | 카카오톡 상담 CTA 식별 이미지 | `PAGE-HOME`, `PAGE-PRIVACY` | 헤더·Hero·모바일 메뉴·하단 상담 CTA | PC·태블릿·모바일 | 사용자 제공·상표 조건 미확인 | CSS 축소 적용 | Applied |
+| `AST-IMG-KAKAO-CTA-001` | 삭제됨 — 기존 `public/images/kakao-talk-consultation.png` | PNG 이미지 | 이전 카카오톡 상담 CTA 식별 이미지 | `PAGE-HOME`, `PAGE-PRIVACY` | 적용 종료 | 해당 없음 | 사용자 제공·상표 조건 미확인 | 해당 없음 | Deprecated |
 
 ## 4. 자산 상세
 
@@ -107,7 +107,7 @@
 - 파일명: `kakao-talk-consultation.png`
 - 원본 파일명: `kakotalk-images.png`
 - 원본 위치: `/Users/sgk/Downloads/kakotalk-images.png`
-- 현재 경로: `public/images/kakao-talk-consultation.png`
+- 현재 경로: 삭제됨 — 기존 `public/images/kakao-talk-consultation.png`
 - 미디어 유형: 이미지
 - 파일 형식: PNG
 - MIME 유형: `image/png`
@@ -118,18 +118,20 @@
 - SHA-256: `c676a9dfcc64c8f1360d578a4d1dd25f3cadcdb45dd79e377a20915acfe9dcc6`
 - 이미지 내용: 노란색 배경 위 `TALK` 말풍선 심볼
 - 대상 Page: 메인 페이지와 개인정보처리방침 페이지
-- 사용 목적: 카카오톡 상담 CTA를 직관적으로 식별하는 보조 이미지
-- 표시 위치: PC 헤더, 모바일 메뉴, 메인 Hero와 하단 상담 CTA
+- 사용 목적: 이전 카카오톡 상담 CTA를 직관적으로 식별하던 보조 이미지 — 현재 사용하지 않음
+- 표시 위치: 적용 종료 — 과거 PC 헤더, 모바일 메뉴, 메인 Hero와 하단 상담 CTA
 - 리사이징 방식: 원본 파일을 변환하지 않고 CSS에서 3:2 비율을 유지해 34~42px 너비로 표시하며, 중앙 TALK 말풍선 식별을 위해 컨테이너 안에서 1.65배 확대
-- 대체 텍스트: 빈 값 — 같은 링크에 `카카오 상담` 또는 `카카오톡 상담하기` 텍스트가 존재하므로 장식 이미지로 처리
+- 대체 텍스트: 해당 없음 — HTML에서 이미지 요소 제거
 - 제공 방식: 사용자가 로컬 파일로 제공하고 실제 사이트 사용을 요청
 - 저작권자 및 상표권자: `[미정]`
 - 상업적 사용 조건: `[미정 — 카카오 브랜드·상표 사용 조건 별도 확인 필요]`
 - 출처 표기: `[미정]`
-- 사용 승인 상태: Approved — 사용자 적용 지시
-- 사이트 적용 상태: Applied
-- 최적화 상태: 원본 유지, 추가 변환 없음
-- 파일 작업 내역: 원본과 동일한 바이너리를 표준 영문 파일명으로 `public/images/`에 복사
+- 사용 승인 상태: Deprecated — 사용자 요청으로 적용 종료
+- 사이트 적용 상태: Not Applied
+- 최적화 상태: 해당 없음
+- 폐기 사유: 사용자가 이미지 문제를 확인하여 CTA에서 이미지를 제거하도록 요청함
+- 파일 작업 내역: 2026-07-29 `public/images/kakao-talk-consultation.png` 삭제, HTML·CSS 참조 제거
+- 복구 가능 여부: Git 이력의 기존 적용 커밋에서 복구 가능
 - 마지막 확인일: 2026-07-29
 
 ## 5. 적용 전후 점검 항목
