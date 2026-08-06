@@ -88,10 +88,61 @@ export default function ApprovalDraftPage({ isEdit = false }) {
     return () => { active = false; };
   }, [documentId, isEdit]);
 
+  const [savedPresets, setSavedPresets] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('jeakyung-approval-presets') || '[]');
+    } catch {
+      return [];
+    }
+  });
+
   const selectedTemplate = catalog.templates.find((item) => item.id === selectedTemplateId) ?? null;
   const fields = Array.isArray(selectedTemplate?.version?.form_schema) ? selectedTemplate.version.form_schema : [];
   const lines = Array.isArray(selectedTemplate?.version?.line_schema) ? selectedTemplate.version.line_schema : [];
   const userNames = useMemo(() => Object.fromEntries(catalog.users.map((item) => [item.id, item.name])), [catalog.users]);
+
+  // 주요 결재자 (대표이사, 사장, 이사, 지사장, 본부장, 팀장 등 사원/대리가 아닌 직원)
+  const executiveUsers = useMemo(() => {
+    const selected = new Set((customLines ?? []).flatMap((line) => line.assignee_user_ids ?? []));
+    const ranks = ['대표', '사장', '임원', '이사', '전무', '상무', '지사장', '본부장', '센터장', '팀장', '부장', '차장', '과장', '관리자'];
+    const candidates = catalog.users.filter((u) => {
+      if (u.id === auth.user?.id || selected.has(u.id)) return false;
+      const pos = `${u.position_name ?? ''} ${u.job_title_name ?? ''} ${u.department_name ?? ''} ${u.name ?? ''}`;
+      return ranks.some((r) => pos.includes(r)) || (!pos.includes('사원') && !pos.includes('대리'));
+    });
+    return candidates.length > 0 ? candidates : catalog.users.filter((u) => u.id !== auth.user?.id && !selected.has(u.id));
+  }, [catalog.users, customLines, auth.user?.id]);
+
+  const saveCurrentPreset = () => {
+    if (!customLines || customLines.length === 0) {
+      alert('저장할 결재선이 없습니다. 먼저 결재자를 추가해 주세요.');
+      return;
+    }
+    const name = window.prompt('저장할 결재선 이름을 입력하세요. (예: 팀장-이사-대표이사 결재선)');
+    if (!name || !name.trim()) return;
+    const newPreset = {
+      id: crypto.randomUUID(),
+      name: name.trim(),
+      lines: customLines.map((l) => ({ assignee_user_ids: l.assignee_user_ids })),
+    };
+    const next = [newPreset, ...savedPresets.filter((p) => p.name !== name.trim())].slice(0, 15);
+    setSavedPresets(next);
+    try { localStorage.setItem('jeakyung-approval-presets', JSON.stringify(next)); } catch {}
+  };
+
+  const applyPreset = (preset) => {
+    if (!preset || !preset.lines) return;
+    setCustomLines(
+      preset.lines.map((l, index) => ({
+        step_order: index + 1,
+        step_kind: 'approval',
+        line_mode: 'sequential',
+        required_count: 1,
+        is_blocking: true,
+        assignee_user_ids: l.assignee_user_ids ?? [],
+      }))
+    );
+  };
 
   const approverResults = useMemo(() => {
     const term = approverSearch.trim().toLowerCase();
@@ -145,6 +196,17 @@ export default function ApprovalDraftPage({ isEdit = false }) {
         }
       }
       setAttachmentFiles([]);
+
+      if (customLines && customLines.length > 0) {
+        try {
+          const recent = {
+            id: 'recent-last',
+            name: `최근 사용 결재선 (${customLines.length}명)`,
+            lines: customLines.map((l) => ({ assignee_user_ids: l.assignee_user_ids })),
+          };
+          localStorage.setItem('jeakyung-approval-recent', JSON.stringify(recent));
+        } catch {}
+      }
 
       if (submit) {
         // 4. 기안 제출
@@ -230,12 +292,53 @@ export default function ApprovalDraftPage({ isEdit = false }) {
         <div className="gw-approval-card-heading">
           <div>
             <h2>결재선 지정</h2>
-            <p>양식 기본 결재선을 사용하거나 이름·부서·직급으로 결재자를 직접 찾을 수 있습니다.</p>
+            <p>자주 쓰는 결재선을 불러오거나, 추천 결재자(대표이사/이사/지사장/팀장 등) 및 직원을 선택하여 지정할 수 있습니다.</p>
           </div>
           <button className="gw-secondary-button" type="button" onClick={() => { setCustomLines((cur) => cur === null ? [] : null); setApproverSearch(''); }}>
             {customLines === null ? '직접 지정' : '양식 기본값 사용'}
           </button>
         </div>
+
+        {/* 결재선 불러오기 / 저장 Combobox Toolbar */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.85rem', flexWrap: 'wrap', padding: '0.5rem 0.75rem', background: 'var(--gw-background)', borderRadius: '8px', border: '1px solid var(--gw-border)' }}>
+          <span style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--gw-navy-950)' }}>📁 결재선 콤보박스:</span>
+          <select
+            style={{ padding: '0.4rem 0.6rem', fontSize: '0.85rem', borderRadius: '6px', border: '1px solid var(--gw-border)', flex: '1', minWidth: '220px', background: '#fff', cursor: 'pointer' }}
+            onChange={(e) => {
+              const val = e.target.value;
+              if (!val) return;
+              if (val === 'recent') {
+                try {
+                  const rec = JSON.parse(localStorage.getItem('jeakyung-approval-recent') || 'null');
+                  if (rec) applyPreset(rec);
+                } catch {}
+              } else {
+                const found = savedPresets.find((p) => p.id === val);
+                if (found) applyPreset(found);
+              }
+              e.target.value = '';
+            }}
+          >
+            <option value="">-- 자주 쓰는 / 최근 결재선 선택 --</option>
+            {Boolean(localStorage.getItem('jeakyung-approval-recent')) && (
+              <option value="recent">⏱️ 최근 제출 결재선</option>
+            )}
+            {savedPresets.map((preset) => (
+              <option key={preset.id} value={preset.id}>⭐ {preset.name}</option>
+            ))}
+          </select>
+          {customLines !== null && customLines.length > 0 && (
+            <button
+              type="button"
+              className="gw-secondary-button"
+              style={{ fontSize: '0.8rem', padding: '0.35rem 0.65rem' }}
+              onClick={saveCurrentPreset}
+            >
+              ⭐ 현재 결재선 저장
+            </button>
+          )}
+        </div>
+
         {customLines === null ? (
           <div className="gw-approval-line-preview">
             {lines.map((line, index) => (
@@ -250,8 +353,32 @@ export default function ApprovalDraftPage({ isEdit = false }) {
           </div>
         ) : (
           <>
+            {/* 주요 결재자 (대표이사, 사장, 이사, 지사장, 본부장, 팀장 등) 빠른 선택 목록 */}
+            {executiveUsers.length > 0 && (
+              <div style={{ marginBottom: '0.85rem', padding: '0.65rem 0.85rem', background: '#f5f7ff', borderRadius: '8px', border: '1px solid #dce4ff' }}>
+                <span style={{ display: 'block', fontSize: '0.8rem', fontWeight: '700', color: 'var(--gw-blue-700)', marginBottom: '0.4rem' }}>
+                  👔 주요 결재자 (대표이사·이사·지사장·팀장 등) 목록에서 바로 선택
+                </span>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
+                  {executiveUsers.map((user) => (
+                    <button
+                      key={user.id}
+                      type="button"
+                      className="gw-secondary-button"
+                      style={{ fontSize: '0.8rem', padding: '0.3rem 0.6rem', background: '#fff' }}
+                      onClick={() => {
+                        setCustomLines((cur) => [...cur, { step_order: cur.length + 1, step_kind: 'approval', line_mode: 'sequential', required_count: 1, is_blocking: true, assignee_user_ids: [user.id] }]);
+                      }}
+                    >
+                      + {user.name} <small style={{ color: 'var(--gw-muted)' }}>({user.position_name || user.department_name || '임원/팀장'})</small>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <label className="gw-field gw-approver-search">
-              <span>결재자 이름 조회</span>
+              <span>직원 직접 검색</span>
               <input value={approverSearch} onChange={(event) => setApproverSearch(event.target.value)} placeholder="이름, 부서 또는 직급 입력" autoComplete="off" />
             </label>
             {approverResults.length > 0 && (
@@ -286,7 +413,7 @@ export default function ApprovalDraftPage({ isEdit = false }) {
                 );
               })}
             </div>
-            {customLines.length === 0 && <p className="gw-empty-state">위 검색창에서 결재자를 순서대로 추가해 주세요.</p>}
+            {customLines.length === 0 && <p className="gw-empty-state">상단 주요 결재자 목록이나 직원 검색창에서 결재자를 순서대로 추가해 주세요.</p>}
           </>
         )}
       </section>
