@@ -39,12 +39,7 @@ const ApprovalListPage = ({ type }) => {
         .from('approval_documents')
         .select(`
           *,
-          template:template_id (name),
-          drafter:drafter_user_id (
-            full_name,
-            preferred_name,
-            name
-          )
+          template:template_id (name)
         `)
         .order('created_at', { ascending: false });
 
@@ -69,7 +64,26 @@ const ApprovalListPage = ({ type }) => {
       const { data, error } = await query;
       if (error) throw error;
 
-      setDocuments(data || []);
+      const drafterIds = Array.from(new Set((data || []).map((doc) => doc.drafter_user_id).filter(Boolean)));
+      let drafterMap = {};
+      if (drafterIds.length > 0) {
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('id, name, full_name, preferred_name')
+          .in('id', drafterIds);
+        if (profiles) {
+          drafterMap = Object.fromEntries(
+            profiles.map((p) => [p.id, p.preferred_name || p.full_name || p.name || '알 수 없음'])
+          );
+        }
+      }
+
+      const formatted = (data || []).map((doc) => ({
+        ...doc,
+        drafter_name: doc.drafter_name || drafterMap[doc.drafter_user_id] || '알 수 없음'
+      }));
+
+      setDocuments(formatted);
     } catch (error) {
       console.error('Failed to load approval documents', error);
       setDocuments([]);

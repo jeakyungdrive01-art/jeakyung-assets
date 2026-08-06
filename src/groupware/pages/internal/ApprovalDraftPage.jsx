@@ -44,8 +44,31 @@ export default function ApprovalDraftPage({ isEdit = false }) {
           setTitle(documentValue.title ?? '');
           setBody(bodyToText(documentValue.revision?.body_json));
           setFormData(documentValue.revision?.form_data ?? {});
-          const revisionLines = (documentValue.lines ?? []).filter((line) => line.revision_id === documentValue.current_revision_id).sort((a, b) => a.step_order - b.step_order);
-          setCustomLines(revisionLines.map((line, index) => ({ step_order: index + 1, step_kind: line.step_kind, line_mode: line.line_mode, required_count: line.required_count, is_blocking: line.is_blocking, assignee_user_ids: (line.assignees ?? []).map((item) => item.assigned_user_id) })));
+          let loadedCustomLines = null;
+          if (documentValue.lines && documentValue.lines.length > 0) {
+            const revisionLines = documentValue.lines.filter((line) => line.revision_id === documentValue.current_revision_id).sort((a, b) => a.step_order - b.step_order);
+            if (revisionLines.length > 0) {
+              loadedCustomLines = revisionLines.map((line, index) => ({
+                step_order: index + 1,
+                step_kind: line.step_kind,
+                line_mode: line.line_mode,
+                required_count: line.required_count,
+                is_blocking: line.is_blocking,
+                assignee_user_ids: (line.assignees ?? []).map((item) => item.assigned_user_id),
+              }));
+            }
+          }
+          if (!loadedCustomLines && Array.isArray(documentValue.draft_line_schema) && documentValue.draft_line_schema.length > 0) {
+            loadedCustomLines = documentValue.draft_line_schema.map((line, index) => ({
+              step_order: index + 1,
+              step_kind: line.step_kind ?? 'approval',
+              line_mode: line.line_mode ?? 'sequential',
+              required_count: line.required_count ?? 1,
+              is_blocking: line.is_blocking ?? true,
+              assignee_user_ids: (line.assignees ?? []).flatMap((item) => item.user_id ? [item.user_id] : []),
+            }));
+          }
+          setCustomLines(loadedCustomLines);
           setReferences((documentValue.references ?? []).map((item) => ({ user_id: item.user_id, reference_type: item.reference_type })));
         } else {
           setSelectedTemplateId(nextCatalog.templates[0]?.id ?? '');
