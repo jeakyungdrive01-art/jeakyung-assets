@@ -87,7 +87,30 @@ export default function ApprovalDocumentPage() {
   const actions = doc.availableActions ?? {};
 
   return <article className="gw-approval-page" aria-labelledby="approval-document-title">
-    <header className="gw-approval-heading"><div><div className="gw-approval-kicker"><span>{doc.template?.name ?? '결재 문서'}</span><span>{doc.document_number || '문서번호 미발급'}</span></div><h1 id="approval-document-title">{doc.title}</h1><p>{doc.revision?.drafter_snapshot?.name ?? '기안자'} · {new Date(doc.submitted_at ?? doc.created_at).toLocaleString('ko-KR')}</p></div><div className="gw-admin-actions gw-no-print"><button className="gw-secondary-button" type="button" onClick={() => window.print()}>인쇄</button><span className={`gw-approval-status is-${doc.status}`}>{statusLabel(doc.status)}</span></div></header>
+    <header className="gw-approval-heading">
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+        <button
+          type="button"
+          className="gw-secondary-button"
+          style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem', padding: '0.4rem 0.75rem' }}
+          onClick={() => navigate(-1)}
+        >
+          ← 뒤로 가기
+        </button>
+        <div>
+          <div className="gw-approval-kicker">
+            <span>{doc.template?.name ?? '결재 문서'}</span>
+            <span>{doc.document_number || '문서번호 미발급'}</span>
+          </div>
+          <h1 id="approval-document-title">{doc.title}</h1>
+          <p>{doc.revision?.drafter_snapshot?.name ?? '기안자'} · {new Date(doc.submitted_at ?? doc.created_at).toLocaleString('ko-KR')}</p>
+        </div>
+      </div>
+      <div className="gw-admin-actions gw-no-print">
+        <button className="gw-secondary-button" type="button" onClick={() => window.print()}>인쇄</button>
+        <span className={`gw-approval-status is-${doc.status}`}>{statusLabel(doc.status)}</span>
+      </div>
+    </header>
     {error && <div className="gw-notice gw-notice--warning" role="alert">{error}</div>}
 
     <section className="gw-approval-card"><div className="gw-approval-facts"><div><span>기안자</span><strong>{doc.revision?.drafter_snapshot?.name ?? '-'}</strong></div><div><span>소속</span><strong>{doc.revision?.drafter_snapshot?.department_name ?? '-'}</strong></div><div><span>문서 상태</span><strong>{statusLabel(doc.status)}</strong></div><div><span>현재 단계</span><strong>{doc.current_step_order || '-'}</strong></div></div></section>

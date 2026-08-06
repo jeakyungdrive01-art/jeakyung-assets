@@ -178,10 +178,20 @@ export default function ApprovalDraftPage({ isEdit = false }) {
   return (
     <article className="gw-approval-page" aria-labelledby="approval-draft-title">
       <header className="gw-approval-heading">
-        <div>
-          <span className="gw-eyebrow">APPROVAL DRAFT</span>
-          <h1 id="approval-draft-title">{isEdit ? '기안서 수정' : '새 기안 작성'}</h1>
-          <p>양식에 맞춰 내용을 작성하면 결재선이 자동으로 생성됩니다.</p>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <button
+            type="button"
+            className="gw-secondary-button"
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem', padding: '0.4rem 0.75rem' }}
+            onClick={() => navigate(-1)}
+          >
+            ← 뒤로 가기
+          </button>
+          <div>
+            <span className="gw-eyebrow">APPROVAL DRAFT</span>
+            <h1 id="approval-draft-title">{isEdit ? '기안서 수정' : '새 기안 작성'}</h1>
+            <p>양식에 맞춰 내용을 작성한 후 아래에서 결재선을 지정해 주세요.</p>
+          </div>
         </div>
         <div className="gw-admin-actions">
           <button className="gw-secondary-button" type="button" disabled={submitting} onClick={() => save()}>임시 저장</button>
@@ -203,6 +213,20 @@ export default function ApprovalDraftPage({ isEdit = false }) {
             <input maxLength="240" value={title} onChange={(event) => setTitle(event.target.value)} placeholder="기안서 제목" />
           </label>
         </div>
+      </section>
+
+      {/* 양식 입력 */}
+      <section className="gw-approval-card">
+        <h2>양식 입력</h2>
+        <div className="gw-approval-form-grid">
+          {fields.map((field) => (
+            <ApprovalField key={field.key} field={field} value={formData[field.key] ?? ''} onChange={(value) => setFormData((cur) => ({ ...cur, [field.key]: value }))} />
+          ))}
+        </div>
+        <label className="gw-field">
+          <span>상세 내용</span>
+          <textarea value={body} onChange={(event) => setBody(event.target.value)} placeholder="기안 배경, 요청 사항과 참고 내용을 작성하세요." />
+        </label>
       </section>
 
       {/* 결재선 */}
@@ -269,20 +293,6 @@ export default function ApprovalDraftPage({ isEdit = false }) {
             {customLines.length === 0 && <p className="gw-empty-state">위 검색창에서 결재자를 순서대로 추가해 주세요.</p>}
           </>
         )}
-      </section>
-
-      {/* 양식 입력 */}
-      <section className="gw-approval-card">
-        <h2>양식 입력</h2>
-        <div className="gw-approval-form-grid">
-          {fields.map((field) => (
-            <ApprovalField key={field.key} field={field} value={formData[field.key] ?? ''} onChange={(value) => setFormData((cur) => ({ ...cur, [field.key]: value }))} />
-          ))}
-        </div>
-        <label className="gw-field">
-          <span>상세 내용</span>
-          <textarea value={body} onChange={(event) => setBody(event.target.value)} placeholder="기안 배경, 요청 사항과 참고 내용을 작성하세요." />
-        </label>
       </section>
 
       {/* 참조·열람자 */}
