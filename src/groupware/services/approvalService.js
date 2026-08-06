@@ -133,8 +133,7 @@ export const approvalService = {
     const client = requireSupabase();
     const { data: { user }, error: userError } = await client.auth.getUser();
     if (userError || !user) throw userError ?? new Error('로그인이 필요합니다.');
-    const allowed = ['application/pdf','image/jpeg','image/png','image/webp','text/plain','application/zip','application/vnd.openxmlformats-officedocument.wordprocessingml.document','application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'];
-    if (!allowed.includes(file.type) || file.size < 1 || file.size > 20971520) throw new Error('허용된 문서·이미지·압축 파일만 20MB 이하로 첨부할 수 있습니다.');
+    if (!file || file.size < 1 || file.size > 20971520) throw new Error('파일 용량은 20MB 이하만 첨부할 수 있습니다.');
     // Supabase Storage only allows ASCII in storage paths.
     // Strip non-ASCII, replace spaces and special chars with underscore, keep extension.
     const dotIndex = file.name.lastIndexOf('.');
@@ -145,9 +144,10 @@ export const approvalService = {
       .slice(0, 80) || 'attachment';
     const safeName = (base + ext) || 'attachment';
     const path = `${documentId}/${user.id}/${crypto.randomUUID()}-${safeName}`;
-    const { error: uploadError } = await client.storage.from('groupware-approval-attachments').upload(path, file, { contentType: file.type, upsert: false });
+    const contentType = file.type || 'application/octet-stream';
+    const { error: uploadError } = await client.storage.from('groupware-approval-attachments').upload(path, file, { contentType, upsert: false });
     if (uploadError) throw uploadError;
-    try { return await rpc('register_approval_attachment', { p_document_id: documentId, p_storage_path: path, p_original_name: file.name, p_mime_type: file.type, p_file_size: file.size }); }
+    try { return await rpc('register_approval_attachment', { p_document_id: documentId, p_storage_path: path, p_original_name: file.name, p_mime_type: contentType, p_file_size: file.size }); }
     catch (error) { await client.storage.from('groupware-approval-attachments').remove([path]); throw error; }
   },
 

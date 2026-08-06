@@ -364,6 +364,11 @@ export default function ApprovalDraftPage({ isEdit = false }) {
         )}
       </section>
 
+      <div className="gw-admin-actions" style={{ marginTop: '1.5rem', display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
+        <button className="gw-secondary-button" type="button" disabled={submitting} onClick={() => save()}>임시 저장</button>
+        <button className="gw-primary-button" type="button" disabled={submitting} onClick={() => save({ submit: true })}>{submitting ? '처리 중…' : '기안 요청'}</button>
+      </div>
+
       {status && <p className="gw-form-status" role="status">{status}</p>}
     </article>
   );
