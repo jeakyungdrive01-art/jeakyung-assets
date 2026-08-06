@@ -135,14 +135,14 @@ export const approvalService = {
     if (userError || !user) throw userError ?? new Error('로그인이 필요합니다.');
     if (!file || file.size < 1 || file.size > 20971520) throw new Error('파일 용량은 20MB 이하만 첨부할 수 있습니다.');
     // Supabase Storage only allows ASCII in storage paths.
-    // Strip non-ASCII, replace spaces and special chars with underscore, keep extension.
+    // Clean base and extension so Korean files (e.g. 자격증모아.png) map to clean ASCII names like attachment.png
     const dotIndex = file.name.lastIndexOf('.');
-    const ext = dotIndex !== -1 ? file.name.slice(dotIndex).replace(/[^.a-zA-Z0-9]/g, '') : '';
-    const base = (dotIndex !== -1 ? file.name.slice(0, dotIndex) : file.name)
-      .replace(/[^a-zA-Z0-9._-]+/g, '_')
-      .replace(/^_+|_+$/g, '')
-      .slice(0, 80) || 'attachment';
-    const safeName = (base + ext) || 'attachment';
+    const rawExt = dotIndex !== -1 ? file.name.slice(dotIndex).toLowerCase().replace(/[^a-z0-9.]/g, '') : '';
+    const ext = (rawExt && rawExt.startsWith('.')) ? rawExt : (rawExt ? `.${rawExt}` : '');
+    const rawBase = dotIndex !== -1 ? file.name.slice(0, dotIndex) : file.name;
+    const cleanBase = rawBase.replace(/[^a-zA-Z0-9._-]+/g, '_').replace(/^_+|_+$/g, '').slice(0, 80);
+    const base = cleanBase || 'attachment';
+    const safeName = `${base}${ext}`;
     const path = `${documentId}/${user.id}/${crypto.randomUUID()}-${safeName}`;
     const contentType = file.type || 'application/octet-stream';
     const { error: uploadError } = await client.storage.from('groupware-approval-attachments').upload(path, file, { contentType, upsert: false });
