@@ -25,7 +25,11 @@ export default function ApprovalDraftPage({ isEdit = false }) {
   const [approverSearch, setApproverSearch] = useState('');
   const [references, setReferences] = useState([]);
   const [referenceSearch, setReferenceSearch] = useState('');
+  const [attachmentFiles, setAttachmentFiles] = useState([]);
   const [existingAttachments, setExistingAttachments] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [status, setStatus] = useState('');
 
   useEffect(() => {
     let active = true;
@@ -42,9 +46,13 @@ export default function ApprovalDraftPage({ isEdit = false }) {
           setBody(bodyToText(documentValue.revision?.body_json));
           setFormData(documentValue.revision?.form_data ?? {});
           setExistingAttachments(documentValue.attachments ?? []);
+
+          // 결재선 복원: revision lines → draft_line_schema 순으로 폴백
           let loadedCustomLines = null;
           if (documentValue.lines && documentValue.lines.length > 0) {
-            const revisionLines = documentValue.lines.filter((line) => line.revision_id === documentValue.current_revision_id).sort((a, b) => a.step_order - b.step_order);
+            const revisionLines = documentValue.lines
+              .filter((line) => line.revision_id === documentValue.current_revision_id)
+              .sort((a, b) => a.step_order - b.step_order);
             if (revisionLines.length > 0) {
               loadedCustomLines = revisionLines.map((line, index) => ({
                 step_order: index + 1,
@@ -63,7 +71,7 @@ export default function ApprovalDraftPage({ isEdit = false }) {
               line_mode: line.line_mode ?? 'sequential',
               required_count: line.required_count ?? 1,
               is_blocking: line.is_blocking ?? true,
-              assignee_user_ids: (line.assignees ?? []).flatMap((item) => item.user_id ? [item.user_id] : []),
+              assignee_user_ids: (line.assignees ?? []).flatMap((item) => (item.user_id ? [item.user_id] : [])),
             }));
           }
           setCustomLines(loadedCustomLines);
@@ -84,17 +92,23 @@ export default function ApprovalDraftPage({ isEdit = false }) {
   const fields = Array.isArray(selectedTemplate?.version?.form_schema) ? selectedTemplate.version.form_schema : [];
   const lines = Array.isArray(selectedTemplate?.version?.line_schema) ? selectedTemplate.version.line_schema : [];
   const userNames = useMemo(() => Object.fromEntries(catalog.users.map((item) => [item.id, item.name])), [catalog.users]);
+
   const approverResults = useMemo(() => {
     const term = approverSearch.trim().toLowerCase();
     if (term.length < 1) return [];
     const selected = new Set((customLines ?? []).flatMap((line) => line.assignee_user_ids ?? []));
-    return catalog.users.filter((user) => user.id !== auth.user?.id && !selected.has(user.id) && `${user.name} ${user.department_name ?? ''} ${user.position_name ?? ''}`.toLowerCase().includes(term)).slice(0, 8);
+    return catalog.users
+      .filter((user) => user.id !== auth.user?.id && !selected.has(user.id) && `${user.name} ${user.department_name ?? ''} ${user.position_name ?? ''}`.toLowerCase().includes(term))
+      .slice(0, 8);
   }, [approverSearch, catalog.users, customLines, auth.user?.id]);
+
   const referenceResults = useMemo(() => {
     const term = referenceSearch.trim().toLowerCase();
     if (!term) return [];
     const selected = new Set(references.map((item) => item.user_id));
-    return catalog.users.filter((user) => user.id !== auth.user?.id && !selected.has(user.id) && `${user.name} ${user.department_name ?? ''} ${user.position_name ?? ''}`.toLowerCase().includes(term)).slice(0, 8);
+    return catalog.users
+      .filter((user) => user.id !== auth.user?.id && !selected.has(user.id) && `${user.name} ${user.department_name ?? ''} ${user.position_name ?? ''}`.toLowerCase().includes(term))
+      .slice(0, 8);
   }, [referenceSearch, references, catalog.users, auth.user?.id]);
 
   const save = async ({ submit = false } = {}) => {
@@ -102,19 +116,28 @@ export default function ApprovalDraftPage({ isEdit = false }) {
     if (!title.trim()) { setStatus('제목을 입력해 주세요.'); return; }
     const missingField = fields.find((field) => field.required && !String(formData[field.key] ?? '').trim());
     if (missingField) { setStatus(`${missingField.label} 항목을 입력해 주세요.`); return; }
+    if (customLines !== null && customLines.length === 0) { setStatus('결재자를 한 명 이상 지정해 주세요.'); return; }
     setSubmitting(true);
     setStatus('');
     try {
-      if (customLines && customLines.length === 0) { setStatus('결재자를 한 명 이상 지정해 주세요.'); setSubmitting(false); return; }
-      const savedId = await approvalService.saveDraft({ documentId: isEdit ? documentId : null, templateId: selectedTemplate.id, title: title.trim(), bodyJson: textToBody(body), formData, lineSchemaOverride: customLines });
+      const savedId = await approvalService.saveDraft({
+        documentId: isEdit ? documentId : null,
+        templateId: selectedTemplate.id,
+        title: title.trim(),
+        bodyJson: textToBody(body),
+        formData,
+        lineSchemaOverride: customLines,
+      });
       await approvalService.setReferences(savedId, references);
-      for (const file of attachmentFiles) await approvalService.uploadAttachment(savedId, file);
+      for (const file of attachmentFiles) {
+        await approvalService.uploadAttachment(savedId, file);
+      }
       setAttachmentFiles([]);
       if (submit) {
         await approvalService.submitDocument(savedId);
         navigate('/approval/outbox');
       } else {
-        setStatus('임시 저장했습니다. 결재선과 첨부파일이 안전하게 반영되었습니다.');
+        setStatus('임시 저장했습니다.');
         if (!isEdit) {
           navigate(`/approval/documents/${savedId}/edit`, { replace: true });
         } else {
@@ -130,61 +153,200 @@ export default function ApprovalDraftPage({ isEdit = false }) {
   };
 
   if (loading) return <p className="gw-empty-state" role="status">기안 작성 화면을 불러오고 있습니다.</p>;
-  if (catalog.templates.length === 0) return <div className="gw-notice gw-notice--warning">게시된 결재 양식이 없습니다. 관리자에게 양식 발행을 요청해 주세요.</div>;
+  if (!loading && catalog.templates.length === 0) return <div className="gw-notice gw-notice--warning">게시된 결재 양식이 없습니다. 관리자에게 양식 발행을 요청해 주세요.</div>;
 
-  return <article className="gw-approval-page" aria-labelledby="approval-draft-title">
-    <header className="gw-approval-heading"><div><span className="gw-eyebrow">APPROVAL DRAFT</span><h1 id="approval-draft-title">{isEdit ? '기안서 수정' : '새 기안 작성'}</h1><p>양식에 맞춰 내용을 작성하면 결재선이 자동으로 생성됩니다.</p></div><div className="gw-admin-actions"><button className="gw-secondary-button" type="button" disabled={submitting} onClick={() => save()}>임시 저장</button><button className="gw-primary-button" type="button" disabled={submitting} onClick={() => save({ submit: true })}>{submitting ? '처리 중…' : '기안 요청'}</button></div></header>
+  return (
+    <article className="gw-approval-page" aria-labelledby="approval-draft-title">
+      <header className="gw-approval-heading">
+        <div>
+          <span className="gw-eyebrow">APPROVAL DRAFT</span>
+          <h1 id="approval-draft-title">{isEdit ? '기안서 수정' : '새 기안 작성'}</h1>
+          <p>양식에 맞춰 내용을 작성하면 결재선이 자동으로 생성됩니다.</p>
+        </div>
+        <div className="gw-admin-actions">
+          <button className="gw-secondary-button" type="button" disabled={submitting} onClick={() => save()}>임시 저장</button>
+          <button className="gw-primary-button" type="button" disabled={submitting} onClick={() => save({ submit: true })}>{submitting ? '처리 중…' : '기안 요청'}</button>
+        </div>
+      </header>
 
-    <section className="gw-approval-card"><div className="gw-admin-form-grid"><label className="gw-field"><span>결재 양식</span><select value={selectedTemplateId} disabled={isEdit} onChange={(event) => { setSelectedTemplateId(event.target.value); setFormData({}); setCustomLines(null); }}>{catalog.templates.map((item) => <option key={item.id} value={item.id}>{item.category_name} · {item.name}</option>)}</select></label><label className="gw-field gw-field--full"><span>제목</span><input maxLength="240" value={title} onChange={(event) => setTitle(event.target.value)} placeholder="기안서 제목" /></label></div></section>
+      {/* 양식·제목 */}
+      <section className="gw-approval-card">
+        <div className="gw-admin-form-grid">
+          <label className="gw-field">
+            <span>결재 양식</span>
+            <select value={selectedTemplateId} disabled={isEdit} onChange={(event) => { setSelectedTemplateId(event.target.value); setFormData({}); setCustomLines(null); }}>
+              {catalog.templates.map((item) => <option key={item.id} value={item.id}>{item.category_name} · {item.name}</option>)}
+            </select>
+          </label>
+          <label className="gw-field gw-field--full">
+            <span>제목</span>
+            <input maxLength="240" value={title} onChange={(event) => setTitle(event.target.value)} placeholder="기안서 제목" />
+          </label>
+        </div>
+      </section>
 
-    <section className="gw-approval-card"><div className="gw-approval-card-heading"><div><h2>결재선 지정</h2><p>양식 기본 결재선을 사용하거나 이름·부서·직급으로 결재자를 직접 찾을 수 있습니다.</p></div><button className="gw-secondary-button" type="button" onClick={() => { setCustomLines((current) => current === null ? [] : null); setApproverSearch(''); }}>{customLines === null ? '직접 지정' : '양식 기본값 사용'}</button></div>{customLines === null ? <div className="gw-approval-line-preview">{lines.map((line, index) => <div key={`${line.step_order}-${index}`}><span>{line.step_order ?? index + 1}</span><div><strong>{stepKindLabel(line.step_kind)}</strong><p>{lineTargetLabel(line, userNames)} · {lineModeLabel(line)}</p></div></div>)}</div> : <><label className="gw-field gw-approver-search"><span>결재자 이름 조회</span><input value={approverSearch} onChange={(event) => setApproverSearch(event.target.value)} placeholder="이름, 부서 또는 직급 입력" autoComplete="off" /></label>{approverResults.length > 0 && <div className="gw-approver-results">{approverResults.map((user) => <button type="button" key={user.id} onClick={() => { setCustomLines((current) => [...current, { step_order: current.length + 1, step_kind: 'approval', line_mode: 'sequential', required_count: 1, is_blocking: true, assignee_user_ids: [user.id] }]); setApproverSearch(''); }}><strong>{user.name}</strong><span>{user.department_name ?? '소속 미등록'} · {user.position_name ?? '직급 미등록'}</span></button>)}</div>}<div className="gw-custom-approval-lines">{customLines.map((line, index) => { const user = catalog.users.find((item) => item.id === line.assignee_user_ids?.[0]); return <div key={`${line.assignee_user_ids?.[0]}-${index}`}><span>{index + 1}</span><div><strong>{user?.name ?? '지정 사용자'}</strong><small>{user?.department_name ?? '소속 미등록'} · {user?.position_name ?? '직급 미등록'}</small></div><div className="gw-admin-actions"><button type="button" disabled={index === 0} onClick={() => setCustomLines(moveItem(customLines, index, index - 1))}>위로</button><button type="button" disabled={index === customLines.length - 1} onClick={() => setCustomLines(moveItem(customLines, index, index + 1))}>아래로</button><button type="button" onClick={() => setCustomLines(customLines.filter((_, itemIndex) => itemIndex !== index))}>삭제</button></div></div>; })}</div>{customLines.length === 0 && <p className="gw-empty-state">위 검색창에서 결재자를 순서대로 추가해 주세요.</p>}</>}</section>
-
-    <section className="gw-approval-card"><h2>양식 입력</h2><div className="gw-approval-form-grid">{fields.map((field) => <ApprovalField key={field.key} field={field} value={formData[field.key] ?? ''} onChange={(value) => setFormData((current) => ({ ...current, [field.key]: value }))} />)}</div><label className="gw-field"><span>상세 내용</span><textarea value={body} onChange={(event) => setBody(event.target.value)} placeholder="기안 배경, 요청 사항과 참고 내용을 작성하세요." /></label></section>
-
-    <section className="gw-approval-card"><h2>참조·열람자</h2><label className="gw-field"><span>직원 조회</span><input value={referenceSearch} onChange={(event) => setReferenceSearch(event.target.value)} placeholder="이름, 부서 또는 직급 입력" /></label>{referenceResults.length > 0 && <div className="gw-approver-results">{referenceResults.map((user) => <button type="button" key={user.id} onClick={() => { setReferences((current) => [...current, { user_id: user.id, reference_type: 'reference' }]); setReferenceSearch(''); }}><strong>{user.name}</strong><span>{user.department_name ?? '소속 미등록'} · {user.position_name ?? '직급 미등록'}</span></button>)}</div>}<div className="gw-reference-chips">{references.map((item) => { const user = catalog.users.find((candidate) => candidate.id === item.user_id); return <div key={item.user_id}><strong>{user?.name ?? '사용자'}</strong><select aria-label={`${user?.name ?? '사용자'} 권한`} value={item.reference_type} onChange={(event) => setReferences((current) => current.map((candidate) => candidate.user_id === item.user_id ? { ...candidate, reference_type: event.target.value } : candidate))}><option value="reference">참조</option><option value="reader">열람</option></select><button type="button" onClick={() => setReferences((current) => current.filter((candidate) => candidate.user_id !== item.user_id))}>삭제</button></div>; })}</div></section>
-
-    <section className="gw-approval-card">
-      <h2>첨부파일</h2>
-      {existingAttachments.length > 0 && (
-        <div className="gw-existing-attachments" style={{ marginBottom: '1rem' }}>
-          <h3>등록된 첨부파일</h3>
-          <ul className="gw-approval-attachments">
-            {existingAttachments.map((item) => (
-              <li key={item.id}>
+      {/* 결재선 */}
+      <section className="gw-approval-card">
+        <div className="gw-approval-card-heading">
+          <div>
+            <h2>결재선 지정</h2>
+            <p>양식 기본 결재선을 사용하거나 이름·부서·직급으로 결재자를 직접 찾을 수 있습니다.</p>
+          </div>
+          <button className="gw-secondary-button" type="button" onClick={() => { setCustomLines((cur) => cur === null ? [] : null); setApproverSearch(''); }}>
+            {customLines === null ? '직접 지정' : '양식 기본값 사용'}
+          </button>
+        </div>
+        {customLines === null ? (
+          <div className="gw-approval-line-preview">
+            {lines.map((line, index) => (
+              <div key={`${line.step_order}-${index}`}>
+                <span>{line.step_order ?? index + 1}</span>
                 <div>
-                  <strong>{item.original_name}</strong>
-                  <span>{formatBytes(item.file_size)}</span>
+                  <strong>{stepKindLabel(line.step_kind)}</strong>
+                  <p>{lineTargetLabel(line, userNames)} · {lineModeLabel(line)}</p>
                 </div>
-                <div className="gw-admin-actions">
-                  <a className="gw-secondary-button" href={item.download_url} target="_blank" rel="noreferrer">다운로드</a>
-                  <button className="gw-secondary-button" type="button" onClick={async () => {
-                    await approvalService.deleteAttachment(item.id);
-                    setExistingAttachments((prev) => prev.filter((a) => a.id !== item.id));
-                  }}>삭제</button>
-                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <>
+            <label className="gw-field gw-approver-search">
+              <span>결재자 이름 조회</span>
+              <input value={approverSearch} onChange={(event) => setApproverSearch(event.target.value)} placeholder="이름, 부서 또는 직급 입력" autoComplete="off" />
+            </label>
+            {approverResults.length > 0 && (
+              <div className="gw-approver-results">
+                {approverResults.map((user) => (
+                  <button type="button" key={user.id} onClick={() => {
+                    setCustomLines((cur) => [...cur, { step_order: cur.length + 1, step_kind: 'approval', line_mode: 'sequential', required_count: 1, is_blocking: true, assignee_user_ids: [user.id] }]);
+                    setApproverSearch('');
+                  }}>
+                    <strong>{user.name}</strong>
+                    <span>{user.department_name ?? '소속 미등록'} · {user.position_name ?? '직급 미등록'}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+            <div className="gw-custom-approval-lines">
+              {customLines.map((line, index) => {
+                const user = catalog.users.find((item) => item.id === line.assignee_user_ids?.[0]);
+                return (
+                  <div key={`${line.assignee_user_ids?.[0]}-${index}`}>
+                    <span>{index + 1}</span>
+                    <div>
+                      <strong>{user?.name ?? '지정 사용자'}</strong>
+                      <small>{user?.department_name ?? '소속 미등록'} · {user?.position_name ?? '직급 미등록'}</small>
+                    </div>
+                    <div className="gw-admin-actions">
+                      <button type="button" disabled={index === 0} onClick={() => setCustomLines(moveItem(customLines, index, index - 1))}>위로</button>
+                      <button type="button" disabled={index === customLines.length - 1} onClick={() => setCustomLines(moveItem(customLines, index, index + 1))}>아래로</button>
+                      <button type="button" onClick={() => setCustomLines(customLines.filter((_, i) => i !== index))}>삭제</button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            {customLines.length === 0 && <p className="gw-empty-state">위 검색창에서 결재자를 순서대로 추가해 주세요.</p>}
+          </>
+        )}
+      </section>
+
+      {/* 양식 입력 */}
+      <section className="gw-approval-card">
+        <h2>양식 입력</h2>
+        <div className="gw-approval-form-grid">
+          {fields.map((field) => (
+            <ApprovalField key={field.key} field={field} value={formData[field.key] ?? ''} onChange={(value) => setFormData((cur) => ({ ...cur, [field.key]: value }))} />
+          ))}
+        </div>
+        <label className="gw-field">
+          <span>상세 내용</span>
+          <textarea value={body} onChange={(event) => setBody(event.target.value)} placeholder="기안 배경, 요청 사항과 참고 내용을 작성하세요." />
+        </label>
+      </section>
+
+      {/* 참조·열람자 */}
+      <section className="gw-approval-card">
+        <h2>참조·열람자</h2>
+        <label className="gw-field">
+          <span>직원 조회</span>
+          <input value={referenceSearch} onChange={(event) => setReferenceSearch(event.target.value)} placeholder="이름, 부서 또는 직급 입력" />
+        </label>
+        {referenceResults.length > 0 && (
+          <div className="gw-approver-results">
+            {referenceResults.map((user) => (
+              <button type="button" key={user.id} onClick={() => { setReferences((cur) => [...cur, { user_id: user.id, reference_type: 'reference' }]); setReferenceSearch(''); }}>
+                <strong>{user.name}</strong>
+                <span>{user.department_name ?? '소속 미등록'} · {user.position_name ?? '직급 미등록'}</span>
+              </button>
+            ))}
+          </div>
+        )}
+        <div className="gw-reference-chips">
+          {references.map((item) => {
+            const user = catalog.users.find((c) => c.id === item.user_id);
+            return (
+              <div key={item.user_id}>
+                <strong>{user?.name ?? '사용자'}</strong>
+                <select aria-label={`${user?.name ?? '사용자'} 권한`} value={item.reference_type} onChange={(event) => setReferences((cur) => cur.map((c) => c.user_id === item.user_id ? { ...c, reference_type: event.target.value } : c))}>
+                  <option value="reference">참조</option>
+                  <option value="reader">열람</option>
+                </select>
+                <button type="button" onClick={() => setReferences((cur) => cur.filter((c) => c.user_id !== item.user_id))}>삭제</button>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* 첨부파일 */}
+      <section className="gw-approval-card">
+        <h2>첨부파일</h2>
+        {existingAttachments.length > 0 && (
+          <div style={{ marginBottom: '1rem' }}>
+            <h3 style={{ marginBottom: '0.5rem', fontSize: '0.9rem', color: 'var(--gw-text-secondary)' }}>등록된 첨부파일</h3>
+            <ul className="gw-approval-attachments">
+              {existingAttachments.map((item) => (
+                <li key={item.id}>
+                  <div>
+                    <strong>{item.original_name}</strong>
+                    <span>{formatBytes(item.file_size)}</span>
+                  </div>
+                  <div className="gw-admin-actions">
+                    <a className="gw-secondary-button" href={item.download_url} target="_blank" rel="noreferrer">다운로드</a>
+                    <button className="gw-secondary-button" type="button" onClick={async () => {
+                      try {
+                        await approvalService.deleteAttachment(item.id);
+                        setExistingAttachments((prev) => prev.filter((a) => a.id !== item.id));
+                      } catch (error) {
+                        setStatus(`첨부파일 삭제에 실패했습니다. ${error?.message ?? ''}`);
+                      }
+                    }}>삭제</button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+        <label className="gw-field">
+          <span>{existingAttachments.length > 0 ? '새 파일 추가 (최대 10개, 파일당 20MB)' : '파일 선택 (최대 10개, 파일당 20MB)'}</span>
+          <input type="file" multiple accept=".pdf,.jpg,.jpeg,.png,.webp,.txt,.zip,.docx,.xlsx" onChange={(event) => setAttachmentFiles(Array.from(event.target.files ?? []).slice(0, 10))} />
+        </label>
+        {attachmentFiles.length > 0 && (
+          <ul className="gw-file-selection">
+            {attachmentFiles.map((file) => (
+              <li key={`${file.name}-${file.size}`}>
+                <span>{file.name}</span>
+                <small>{formatBytes(file.size)}</small>
               </li>
             ))}
           </ul>
-        </div>
-      )}
-      <label className="gw-field">
-        <span>{existingAttachments.length > 0 ? '새 파일 추가 (최대 10개, 파일당 20MB)' : '파일 선택(최대 10개, 파일당 20MB)'}</span>
-        <input type="file" multiple accept=".pdf,.jpg,.jpeg,.png,.webp,.txt,.zip,.docx,.xlsx" onChange={(event) => setAttachmentFiles(Array.from(event.target.files ?? []).slice(0, 10))} />
-      </label>
-      {attachmentFiles.length > 0 && (
-        <ul className="gw-file-selection">
-          {attachmentFiles.map((file) => (
-            <li key={`${file.name}-${file.size}`}>
-              <span>{file.name}</span>
-              <small>{formatBytes(file.size)}</small>
-            </li>
-          ))}
-        </ul>
-      )}
-    </section>
+        )}
+      </section>
 
-    {status && <p className="gw-form-status" role="status">{status}</p>}
-  </article>;
+      {status && <p className="gw-form-status" role="status">{status}</p>}
+    </article>
+  );
 }
 
 function moveItem(items, from, to) {
@@ -204,7 +366,7 @@ function ApprovalField({ field, value, onChange }) {
   const common = { required: Boolean(field.required), value, onChange: (event) => onChange(event.target.value) };
   if (field.type === 'textarea') return <label className="gw-field gw-field--full"><span>{field.label}{field.required ? ' *' : ''}</span><textarea {...common} /></label>;
   if (field.type === 'select') return <label className="gw-field"><span>{field.label}{field.required ? ' *' : ''}</span><select {...common}><option value="">선택</option>{(field.options ?? []).map((option) => <option key={option.value ?? option} value={option.value ?? option}>{option.label ?? option}</option>)}</select></label>;
-  return <label className="gw-field"><span>{field.label}{field.required ? ' *' : ''}</span><input type={['number','date','text'].includes(field.type) ? field.type : 'text'} {...common} /></label>;
+  return <label className="gw-field"><span>{field.label}{field.required ? ' *' : ''}</span><input type={['number', 'date', 'text'].includes(field.type) ? field.type : 'text'} {...common} /></label>;
 }
 
 const stepKindLabel = (kind) => ({ approval: '결재', agreement: '합의', cooperation: '협조' }[kind] ?? kind);
@@ -218,23 +380,13 @@ function lineTargetLabel(line, userNames) {
 
 function formatApprovalError(error) {
   const message = String(error?.message || '');
-  if (message.includes('approval_line_has_no_assignee')) {
-    return '결재선에 결재자가 지정되지 않았습니다. [직접 지정] 버튼을 눌러 결재자를 선택해 주세요.';
-  }
-  if (message.includes('approval_line_required')) {
-    return '최소 1명 이상의 결재자를 결재선에 포함해야 합니다.';
-  }
-  if (message.includes('approval_required_count_exceeds_assignees')) {
-    return '결재선 인원이 양식의 최소 승인 필요 인원보다 적습니다.';
-  }
-  if (message.includes('approval_template_unavailable')) {
-    return '선택한 결재 양식을 현재 사용할 수 없습니다.';
-  }
-  if (message.includes('approved_member_required')) {
-    return '승인된 조직원만 기안서를 작성할 수 있습니다.';
-  }
-  if (message.includes('approval_submit_denied')) {
-    return '본인이 작성한 임시 저장/반려/회수 문서만 기안 제출할 수 있습니다.';
-  }
+  if (message.includes('approval_line_has_no_assignee')) return '결재선에 결재자가 지정되지 않았습니다. [직접 지정] 버튼을 눌러 결재자를 선택해 주세요.';
+  if (message.includes('approval_line_required')) return '최소 1명 이상의 결재자를 결재선에 포함해야 합니다.';
+  if (message.includes('approval_required_count_exceeds_assignees')) return '결재선 인원이 양식의 최소 승인 필요 인원보다 적습니다.';
+  if (message.includes('approval_template_unavailable')) return '선택한 결재 양식을 현재 사용할 수 없습니다.';
+  if (message.includes('approved_member_required')) return '승인된 조직원만 기안서를 작성할 수 있습니다.';
+  if (message.includes('approval_submit_denied')) return '본인이 작성한 임시 저장/반려/회수 문서만 기안 제출할 수 있습니다.';
+  if (message.includes('approval_draft_update_denied')) return '임시 저장, 반려 또는 회수된 본인 문서만 수정할 수 있습니다.';
+  if (message.includes('invalid_approval_title')) return '제목은 1~240자 이내로 입력해 주세요.';
   return `처리하지 못했습니다. ${error?.message ?? '입력값과 결재선을 확인해 주세요.'}`;
 }
