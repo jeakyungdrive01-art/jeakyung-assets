@@ -186,7 +186,7 @@ const ApprovalListPage = ({ type }) => {
 
                   <td>
                     <Link
-                      to={`/approval/documents/${document.id}`}
+                      to={type === 'drafts' || document.status === 'draft' ? `/approval/documents/${document.id}/edit` : `/approval/documents/${document.id}`}
                       className="gw-approval-document-link"
                       onClick={() => document.reference_id && !document.read_at && approvalService.markReferenceRead(document.reference_id).catch(() => {})}
                     >
@@ -208,11 +208,22 @@ const ApprovalListPage = ({ type }) => {
                   </td>
 
                   <td>
-                    <span
-                      className={`gw-approval-status is-${document.status}`}
-                    >
-                      {getStatusLabel(document.status)}
-                    </span>
+                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <span
+                        className={`gw-approval-status is-${document.status}`}
+                      >
+                        {getStatusLabel(document.status)}
+                      </span>
+                      {(type === 'drafts' || ['draft', 'recalled', 'rejected'].includes(document.status)) && (
+                        <Link
+                          to={`/approval/documents/${document.id}/edit`}
+                          className="gw-secondary-button"
+                          style={{ padding: '0.2rem 0.5rem', fontSize: '0.8rem' }}
+                        >
+                          수정
+                        </Link>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}
