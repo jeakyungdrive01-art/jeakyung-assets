@@ -120,6 +120,7 @@ export default function ApprovalDraftPage({ isEdit = false }) {
     setSubmitting(true);
     setStatus('');
     try {
+      // 1. 기안 저장
       const savedId = await approvalService.saveDraft({
         documentId: isEdit ? documentId : null,
         templateId: selectedTemplate.id,
@@ -128,21 +129,40 @@ export default function ApprovalDraftPage({ isEdit = false }) {
         formData,
         lineSchemaOverride: customLines,
       });
+
+      // 2. 참조자 설정
       await approvalService.setReferences(savedId, references);
+
+      // 3. 첨부파일 업로드 (개별 실패를 모아서 나중에 알림, 기안 제출 자체는 계속)
+      const uploadErrors = [];
+      const successFiles = [];
       for (const file of attachmentFiles) {
-        await approvalService.uploadAttachment(savedId, file);
+        try {
+          await approvalService.uploadAttachment(savedId, file);
+          successFiles.push(file);
+        } catch (uploadError) {
+          uploadErrors.push(`${file.name}: ${uploadError?.message ?? '업로드 실패'}`);
+        }
       }
       setAttachmentFiles([]);
+
       if (submit) {
+        // 4. 기안 제출
         await approvalService.submitDocument(savedId);
+        if (uploadErrors.length > 0) {
+          // 첨부파일 일부 실패했지만 기안은 제출됨
+          alert(`기안이 제출되었습니다.\n\n다음 첨부파일은 등록에 실패했습니다:\n${uploadErrors.join('\n')}`);
+        }
         navigate('/approval/outbox');
       } else {
-        setStatus('임시 저장했습니다.');
+        const freshDoc = await approvalService.getDocument(savedId);
+        setExistingAttachments(freshDoc.attachments ?? []);
         if (!isEdit) {
           navigate(`/approval/documents/${savedId}/edit`, { replace: true });
+        } else if (uploadErrors.length > 0) {
+          setStatus(`임시 저장했습니다. 단, 일부 파일 첨부에 실패했습니다:\n${uploadErrors.join(' / ')}`);
         } else {
-          const fresh = await approvalService.getDocument(savedId);
-          setExistingAttachments(fresh.attachments ?? []);
+          setStatus('임시 저장했습니다.');
         }
       }
     } catch (error) {

@@ -135,7 +135,15 @@ export const approvalService = {
     if (userError || !user) throw userError ?? new Error('로그인이 필요합니다.');
     const allowed = ['application/pdf','image/jpeg','image/png','image/webp','text/plain','application/zip','application/vnd.openxmlformats-officedocument.wordprocessingml.document','application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'];
     if (!allowed.includes(file.type) || file.size < 1 || file.size > 20971520) throw new Error('허용된 문서·이미지·압축 파일만 20MB 이하로 첨부할 수 있습니다.');
-    const safeName = file.name.replace(/[^\p{L}\p{N}._-]+/gu, '_').slice(-120) || 'attachment';
+    // Supabase Storage only allows ASCII in storage paths.
+    // Strip non-ASCII, replace spaces and special chars with underscore, keep extension.
+    const dotIndex = file.name.lastIndexOf('.');
+    const ext = dotIndex !== -1 ? file.name.slice(dotIndex).replace(/[^.a-zA-Z0-9]/g, '') : '';
+    const base = (dotIndex !== -1 ? file.name.slice(0, dotIndex) : file.name)
+      .replace(/[^a-zA-Z0-9._-]+/g, '_')
+      .replace(/^_+|_+$/g, '')
+      .slice(0, 80) || 'attachment';
+    const safeName = (base + ext) || 'attachment';
     const path = `${documentId}/${user.id}/${crypto.randomUUID()}-${safeName}`;
     const { error: uploadError } = await client.storage.from('groupware-approval-attachments').upload(path, file, { contentType: file.type, upsert: false });
     if (uploadError) throw uploadError;
