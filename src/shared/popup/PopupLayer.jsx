@@ -33,7 +33,6 @@ const rememberDismissal7Days = (id) => {
 
 export default function PopupLayer({ client, target }) {
   const [documents, setDocuments] = useState([]);
-  const [dontShow7Days, setDontShow7Days] = useState(false);
   const closeButtonRef = useRef(null);
   const current = documents[0];
 
@@ -57,15 +56,18 @@ export default function PopupLayer({ client, target }) {
       document.body.style.overflow = previousOverflow;
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [current?.id, dontShow7Days]);
+  }, [current?.id]);
 
   const closeCurrent = () => {
     if (!current) return;
-    if (dontShow7Days) {
-      rememberDismissal7Days(current.id);
-    }
     rememberDismissalSession(current.id);
-    setDontShow7Days(false);
+    setDocuments((items) => items.slice(1));
+  };
+
+  const dismiss7DaysAndClose = () => {
+    if (!current) return;
+    rememberDismissal7Days(current.id);
+    rememberDismissalSession(current.id);
     setDocuments((items) => items.slice(1));
   };
 
@@ -82,14 +84,9 @@ export default function PopupLayer({ client, target }) {
           <PopupDocumentContent html={current.content_html} />
         </div>
         <footer>
-          <label className="site-popup-7days-label">
-            <input
-              type="checkbox"
-              checked={dontShow7Days}
-              onChange={(e) => setDontShow7Days(e.target.checked)}
-            />
-            <span>7일간 표시하지 않기</span>
-          </label>
+          <button type="button" className="site-popup-7days-btn" onClick={dismiss7DaysAndClose}>
+            7일간 표시하지 않기
+          </button>
           <div className="site-popup-footer-actions">
             {documents.length > 1 && <span>다음 안내 {documents.length - 1}개</span>}
             <button type="button" onClick={closeCurrent}>닫기</button>

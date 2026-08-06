@@ -3304,18 +3304,42 @@ body.groupware-root a.gw-secondary-button {
 .gw-page {
   max-width: 1240px;
   margin: 0 auto;
-  padding: 1.25rem 1.5rem;
+  padding: 0.65rem 0.85rem;
 }
 
 .gw-approval-card,
 .gw-card {
-  padding: 1.25rem 1.5rem;
-  margin-bottom: 1.25rem;
-  border-radius: 12px;
+  padding: 0.85rem 1.15rem;
+  margin-bottom: 0.65rem;
+  border-radius: 10px;
+}
+
+.gw-approval-card h2 {
+  font-size: 1.05rem;
+  margin-top: 0;
+  margin-bottom: 0.4rem;
 }
 
 .gw-approval-heading,
 .gw-page-header,
 .gw-post-header {
-  margin-bottom: 1.25rem;
+  margin-bottom: 0.65rem;
+  padding-bottom: 0.35rem;
+}
+
+.gw-approval-heading p,
+.gw-page-header p {
+  margin-top: 0.15rem;
+  margin-bottom: 0;
+  font-size: 0.85rem;
+}
+
+.gw-approval-form-grid,
+.gw-admin-form-grid {
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.gw-approval-card-heading {
+  margin-bottom: 0.5rem;
 }
