@@ -96,7 +96,7 @@ export default function ApprovalDraftPage({ isEdit = false }) {
         if (!isEdit) navigate(`/approval/documents/${savedId}/edit`, { replace: true });
       }
     } catch (error) {
-      setStatus(`처리하지 못했습니다. ${error?.message ?? '입력값과 결재선을 확인해 주세요.'}`);
+      setStatus(formatApprovalError(error));
     } finally {
       setSubmitting(false);
     }
@@ -149,4 +149,27 @@ function lineTargetLabel(line, userNames) {
   if (line.target_type === 'management') return '관리자 중 1명';
   if (line.target_type === 'drafter_department_head') return '기안자 부서장';
   return line.target_id || '양식 지정 대상';
+}
+
+function formatApprovalError(error) {
+  const message = String(error?.message || '');
+  if (message.includes('approval_line_has_no_assignee')) {
+    return '결재선에 결재자가 지정되지 않았습니다. [직접 지정] 버튼을 눌러 결재자를 선택해 주세요.';
+  }
+  if (message.includes('approval_line_required')) {
+    return '최소 1명 이상의 결재자를 결재선에 포함해야 합니다.';
+  }
+  if (message.includes('approval_required_count_exceeds_assignees')) {
+    return '결재선 인원이 양식의 최소 승인 필요 인원보다 적습니다.';
+  }
+  if (message.includes('approval_template_unavailable')) {
+    return '선택한 결재 양식을 현재 사용할 수 없습니다.';
+  }
+  if (message.includes('approved_member_required')) {
+    return '승인된 조직원만 기안서를 작성할 수 있습니다.';
+  }
+  if (message.includes('approval_submit_denied')) {
+    return '본인이 작성한 임시 저장/반려/회수 문서만 기안 제출할 수 있습니다.';
+  }
+  return `처리하지 못했습니다. ${error?.message ?? '입력값과 결재선을 확인해 주세요.'}`;
 }
