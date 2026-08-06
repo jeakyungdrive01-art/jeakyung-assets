@@ -3276,3 +3276,46 @@ body.groupware-root a.gw-secondary-button {
     transform: none;
   }
 }
+
+/* Icon-Only Back Button & Compact Layout Refinements */
+.gw-back-icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border-radius: 8px;
+  border: 1px solid var(--gw-border);
+  background: var(--gw-surface);
+  color: var(--gw-text);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+
+.gw-back-icon-button:hover {
+  background: var(--gw-blue-100);
+  color: var(--gw-blue-600);
+  border-color: var(--gw-blue-600);
+}
+
+.gw-approval-page,
+.gw-page {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 1.25rem 1.5rem;
+}
+
+.gw-approval-card,
+.gw-card {
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1.25rem;
+  border-radius: 12px;
+}
+
+.gw-approval-heading,
+.gw-page-header,
+.gw-post-header {
+  margin-bottom: 1.25rem;
+}

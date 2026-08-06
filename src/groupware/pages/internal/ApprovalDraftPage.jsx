@@ -179,13 +179,8 @@ export default function ApprovalDraftPage({ isEdit = false }) {
     <article className="gw-approval-page" aria-labelledby="approval-draft-title">
       <header className="gw-approval-heading">
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          <button
-            type="button"
-            className="gw-secondary-button"
-            style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem', padding: '0.4rem 0.75rem' }}
-            onClick={() => navigate(-1)}
-          >
-            ← 뒤로 가기
+          <button type="button" className="gw-back-icon-button" onClick={() => navigate(-1)} aria-label="뒤로 가기">
+            <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg>
           </button>
           <div>
             <span className="gw-eyebrow">APPROVAL DRAFT</span>
@@ -194,6 +189,7 @@ export default function ApprovalDraftPage({ isEdit = false }) {
           </div>
         </div>
         <div className="gw-admin-actions">
+          <button className="gw-secondary-button" type="button" onClick={() => navigate('/approval/outbox')}>목록 보기</button>
           <button className="gw-secondary-button" type="button" disabled={submitting} onClick={() => save()}>임시 저장</button>
           <button className="gw-primary-button" type="button" disabled={submitting} onClick={() => save({ submit: true })}>{submitting ? '처리 중…' : '기안 요청'}</button>
         </div>
@@ -375,6 +371,7 @@ export default function ApprovalDraftPage({ isEdit = false }) {
       </section>
 
       <div className="gw-admin-actions" style={{ marginTop: '1.5rem', display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
+        <button className="gw-secondary-button" type="button" onClick={() => navigate('/approval/outbox')}>목록 보기</button>
         <button className="gw-secondary-button" type="button" disabled={submitting} onClick={() => save()}>임시 저장</button>
         <button className="gw-primary-button" type="button" disabled={submitting} onClick={() => save({ submit: true })}>{submitting ? '처리 중…' : '기안 요청'}</button>
       </div>
