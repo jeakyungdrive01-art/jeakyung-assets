@@ -4,7 +4,7 @@ create or replace function public.create_approval_delegation(p_delegate_user_id 
 returns uuid language plpgsql security definer set search_path=pg_catalog as $$
 declare result uuid; cycle_found boolean; status_value text;
 begin
-  if not public.is_approved_member() or not public.approval_is_valid_user(p_delegate_user_id) or p_delegate_user_id=auth.uid() or p_scope_type not in ('all','template','department') or p_starts_at>=p_ends_at or p_ends_at<=now() or p_ends_at>now()+interval '1 year' or char_length(btrim(coalesce(p_reason,'')))<2 then raise exception 'invalid_delegation' using errcode='22023'; end if;
+  if not public.is_approved_member() or not exists(select 1 from public.profiles where id=p_delegate_user_id and membership_status='approved') or p_delegate_user_id=auth.uid() or p_scope_type not in ('all','template','department') or p_starts_at>=p_ends_at or p_ends_at<=now() or p_ends_at>now()+interval '1 year' or char_length(btrim(coalesce(p_reason,'')))<2 then raise exception 'invalid_delegation' using errcode='22023'; end if;
   if p_scope_type='template' and (p_template_id is null or not exists(select 1 from public.approval_templates where id=p_template_id and is_active and archived_at is null)) then raise exception 'invalid_delegation_template' using errcode='22023'; end if;
   if p_scope_type='department' and (p_department_id is null or not exists(select 1 from public.departments where id=p_department_id and is_active and archived_at is null)) then raise exception 'invalid_delegation_department' using errcode='22023'; end if;
   with recursive chain(user_id) as (
@@ -16,7 +16,7 @@ begin
   status_value:=case when p_starts_at<=now() then 'active' else 'scheduled' end;
   insert into public.approval_delegations(delegator_user_id,delegate_user_id,scope_type,template_id,department_id,starts_at,ends_at,reason,status,created_by) values(auth.uid(),p_delegate_user_id,p_scope_type,case when p_scope_type='template' then p_template_id end,case when p_scope_type='department' then p_department_id end,p_starts_at,p_ends_at,btrim(p_reason),status_value,auth.uid()) returning id into result;
   insert into public.audit_logs(actor_user_id,action,target_type,target_id,metadata) values(auth.uid(),'approval.delegation.created','approval_delegation',result::text,jsonb_build_object('scope_type',p_scope_type,'starts_at',p_starts_at,'ends_at',p_ends_at));
-  perform public.approval_emit_notification(p_delegate_user_id,'approval.delegation.started','결재 위임이 등록되었습니다','전자결재 위임 범위를 확인해 주세요.','/approval/delegations','approval_delegation',result);
+  insert into public.groupware_notifications(user_id,notification_type,title,message,route,related_entity_type,related_entity_id) values(p_delegate_user_id,'approval.delegation.started','결재 위임이 등록되었습니다','전자결재 위임 범위를 확인해 주세요.','/approval/delegations','approval_delegation',result);
   return result;
 end; $$;
 
@@ -26,7 +26,7 @@ declare document_value uuid;
 begin
   if not public.is_approved_member() then raise exception 'approved_member_required' using errcode='42501'; end if;
   select document_id into document_value from public.approval_references where id=p_reference_id and user_id=auth.uid();
-  if not found or not public.can_read_approval_document(document_value,auth.uid()) then raise exception 'reference_not_found' using errcode='42501'; end if;
+  if not found or not public.can_view_approval_document(document_value) then raise exception 'reference_not_found' using errcode='42501'; end if;
   update public.approval_references set read_at=coalesce(read_at,now()) where id=p_reference_id and user_id=auth.uid();
 end; $$;
 
@@ -43,7 +43,7 @@ end; $$;
 
 create or replace function public.get_available_approval_actions(p_document_id uuid)
 returns jsonb language sql stable security definer set search_path=pg_catalog as $$
-  select case when public.can_read_approval_document(p_document_id,auth.uid()) then jsonb_build_object(
+  select case when public.can_view_approval_document(p_document_id) then jsonb_build_object(
     'can_edit',d.drafter_user_id=auth.uid() and d.status in ('draft','rejected','recalled'),
     'can_submit',d.drafter_user_id=auth.uid() and d.status='draft',
     'can_recall',d.drafter_user_id=auth.uid() and d.status in ('submitted','in_progress') and coalesce(t.settings->>'recall_policy','before_first_action')<>'disabled' and not exists(select 1 from public.approval_actions where document_id=d.id and action_type in ('approve','reject','hold','release_hold','delegate')),
@@ -56,7 +56,7 @@ returns jsonb language sql stable security definer set search_path=pg_catalog as
     ) order by l.step_order,a.assignee_order)
     from public.approval_lines l join public.approval_line_assignees a on a.line_id=l.id
     where l.document_id=d.id and l.revision_id=d.current_revision_id and l.status in ('active','held')
-      and (a.assigned_user_id=auth.uid() or public.approval_effective_delegation(d.id,a.assigned_user_id,auth.uid()) is not null)
+      and (a.assigned_user_id=auth.uid() or public.has_active_approval_delegation(a.assigned_user_id,d.id))
       and a.status in ('pending','held')),'[]'::jsonb)
   ) else '{}'::jsonb end
   from public.approval_documents d join public.approval_templates t on t.id=d.template_id where d.id=p_document_id;

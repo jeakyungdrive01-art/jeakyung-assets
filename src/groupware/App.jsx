@@ -11,6 +11,7 @@ import SignupPage from './pages/auth/SignupPage.jsx';
 import UpdatePasswordPage from './pages/auth/UpdatePasswordPage.jsx';
 import ApprovalRoutes from './pages/internal/ApprovalRoutes.jsx';
 import AdminPage from './pages/internal/AdminPage.jsx';
+import BoardAdminPage from './pages/internal/BoardAdminPage.jsx';
 import BoardPage from './pages/internal/BoardPage.jsx';
 import BoardsPage from './pages/internal/BoardsPage.jsx';
 import CalendarPage from './pages/internal/CalendarPage.jsx';
@@ -25,9 +26,14 @@ import AdminRoute from './routes/AdminRoute.jsx';
 import ProtectedRoute from './routes/ProtectedRoute.jsx';
 
 const PostWritePage = lazy(() => import('./pages/internal/PostWritePage.jsx'));
+const PopupAdminPage = lazy(() => import('./pages/internal/PopupAdminPage.jsx'));
 
 function EditorRoute() {
   return <Suspense fallback={<p className="gw-empty-state" role="status">게시글 편집기를 불러오고 있습니다.</p>}><PostWritePage /></Suspense>;
+}
+
+function PopupAdminRoute() {
+  return <Suspense fallback={<p className="gw-empty-state" role="status">팝업 문서 관리 화면을 불러오고 있습니다.</p>}><PopupAdminPage /></Suspense>;
 }
 
 export default function App() {
@@ -64,6 +70,8 @@ export default function App() {
               <Route path="files" element={<FilesPage />} />
               <Route element={<AdminRoute />}>
                 <Route path="admin" element={<AdminPage />} />
+                <Route path="admin/boards" element={<BoardAdminPage />} />
+                <Route path="admin/popups" element={<PopupAdminRoute />} />
               </Route>
             </Route>
           </Route>

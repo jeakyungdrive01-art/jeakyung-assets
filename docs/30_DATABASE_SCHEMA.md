@@ -26,6 +26,7 @@ Supabase PostgreSQL에 적용할 논리 모델이다. G2 스키마는 `supabase/
 | 게시판 정의 | `board_groups`, `boards`, `board_categories`, `board_permission_rules`, `board_managers` |
 | 사용자 탐색 | `board_favorites`, `board_recent_visits` |
 | 게시판 콘텐츠 | `board_posts`, `board_comments`, `board_reactions`, `board_post_views`, `board_attachments` |
+| 팝업 문서 | `popup_documents` |
 
 - G3 스키마는 `202607310001_groupware_dashboards_boards.sql`, 작성자 대상 권한 보완 `202607310002_fix_board_author_permissions.sql`, 본문 이미지 확장 `202607310003_board_inline_images.sql`로 재현한다.
 - 위젯 배포와 게시판 권한 대상은 역할·부서·직급·직책·사용자 관계를 기존 G2 테이블에서 판정한다.
@@ -33,12 +34,29 @@ Supabase PostgreSQL에 적용할 논리 모델이다. G2 스키마는 `supabase/
 - `board_posts.content_document`는 서버 허용 목록을 통과한 Tiptap JSON을 보존하고 `content`는 검색용 평문을 유지한다. `cover_attachment_id`는 갤러리 대표 이미지를 가리킨다.
 - `board_attachments.purpose`는 본문 이미지와 일반 첨부를 구분한다. 이미지 크기·형식·대체 텍스트·캡션·정렬·표시 크기·본문 순서와 `pending`·`active`·`cleanup_candidate`·`deleted` 수명주기를 기록한다.
 - `get_admin_system_usage()`는 관리자 전용 집계 RPC로 회원·콘텐츠·첨부 생명주기·Storage 객체와 게시판별 사용량을 반환한다. 원본 행과 개인 식별정보는 반환하지 않는다.
+- 팝업 문서는 노출 위치 배열, 게시 시작·종료 시각, 작성 방식과 정화된 HTML을 보관한다. 공개 조회는 활성 기간과 위치를 서버에서 제한한 RPC만 사용한다.
+
+## G4 전자결재
+
+| 영역 | 실제 테이블 |
+| --- | --- |
+| 양식 | `approval_categories`, `approval_templates`, `approval_template_versions`, `approval_number_sequences` |
+| 문서 | `approval_documents`, `approval_document_revisions`, `approval_attachments`, `approval_comments` |
+| 결재 흐름 | `approval_lines`, `approval_line_assignees`, `approval_actions` |
+| 확장 | `approval_references`, `approval_delegations`, `approval_authority_rules`, `approval_saved_lines`, `groupware_notifications` |
+| 개인 결재 표시 | `approval_credentials`, `approval_actions.credential_snapshot` |
+
+- 문서는 발행된 양식 버전과 기안 시점의 기안자·결재자 조직 정보를 Snapshot으로 보존한다.
+- 임시 저장과 결재선 생성은 서버 함수의 한 트랜잭션에서 처리하며 제출 시 문서번호와 첫 단계를 활성화한다.
+- 문서와 하위 엔터티는 기안자·결재자·유효한 위임자·참조자·관리자 범위에 따라 RLS와 서버 함수에서 함께 제한한다.
+- 도장·서명 원본은 사용자 소유 비공개 Storage에 저장하고 승인 시 사용한 종류·이름·경로·시각을 처리 이력에 Snapshot으로 고정한다.
+- 첨부파일은 문서·업로더 경로의 비공개 Storage 객체와 `approval_attachments` 메타데이터를 함께 보존하며 문서 참여 권한으로 다운로드를 제한한다.
+- 참조자는 문서별 사용자·참조 유형을 중복 없이 기록하고 `read_at`으로 참조함 읽음 상태를 관리한다.
 
 ## 이후 업무 모듈
 
 | 모듈 | 주요 테이블 후보 |
 | --- | --- |
-| 전자결재 | `approval_templates`, `approval_documents`, `approval_steps`, `approval_actions` |
 | 일정 | `calendars`, `events`, `event_attendees` |
 | 파일 | `file_spaces`, `file_entries`, `file_permissions` |
 | 알림 | `notifications`, `notification_preferences` |

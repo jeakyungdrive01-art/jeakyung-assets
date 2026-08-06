@@ -5,3 +5,8 @@ dist/
 !.env.example
 supabase/.temp/
 supabase/.branches/
+.vercel
+.env*
+.DS_Store
+.claude/
+

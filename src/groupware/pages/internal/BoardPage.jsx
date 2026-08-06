@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
+import { getBoardType } from '../../config/boardTypes.js';
 import { getAttachmentViewUrl, getBoardOverview, getBoardPosts } from '../../services/boardService.js';
 
 export default function BoardPage() {
@@ -20,9 +21,27 @@ export default function BoardPage() {
   }, [boardSlug, search, category, page]);
   if (error) return <div className="gw-route-state"><div className="gw-notice gw-notice--warning" role="alert">{error}<br /><Link to="/boards">게시판 목록으로</Link></div></div>;
   if (!overview) return <p className="gw-empty-state" role="status">게시판을 불러오고 있습니다.</p>;
-  return <article className="gw-page" aria-labelledby="board-title"><header className="gw-page-header"><div><span className="gw-eyebrow">{overview.board.board_type}</span><h1 id="board-title">{overview.board.name}</h1><p>{overview.board.description}</p></div>{overview.permissions.create && <Link className="gw-primary-button" to={`/boards/${boardSlug}/write`}>글쓰기</Link>}</header>
-    <form className="gw-board-toolbar" onSubmit={(event) => { event.preventDefault(); const value = new FormData(event.currentTarget).get('search'); setParams((current) => { current.set('q', value); current.set('page', '1'); return current; }); }}><input name="search" defaultValue={search} placeholder="제목과 내용 검색" aria-label="게시판 검색" /><select value={category ?? ''} onChange={(e) => setParams(e.target.value ? { q: search, category: e.target.value, page: '1' } : { q: search, page: '1' })} aria-label="카테고리"><option value="">전체 카테고리</option>{overview.categories.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select><button type="submit">검색</button></form>
-    <div className={`gw-post-list gw-post-list--${overview.board.board_type}`}>{posts.items.map((post) => <article key={post.id} className={post.is_pinned ? 'is-pinned' : ''}>{overview.board.board_type === 'gallery' && <Link className="gw-gallery-thumbnail" to={`/boards/${boardSlug}/posts/${post.id}`} aria-label={`${post.title} 상세 보기`}>{thumbnails[post.id] ? <img src={thumbnails[post.id]} alt="" /> : <span>대표 이미지 없음</span>}</Link>}<div><span>{post.category ?? post.prefix ?? (post.is_notice ? '공지' : '일반')}</span><h2><Link to={`/boards/${boardSlug}/posts/${post.id}`}>{post.title}</Link></h2><p>{post.author_name} · {new Date(post.created_at).toLocaleDateString('ko-KR')} · 조회 {post.view_count} · 댓글 {post.comment_count}</p></div>{post.attachment_count > 0 && <span>첨부 {post.attachment_count}</span>}</article>)}</div>
-    {posts.items.length === 0 && <p className="gw-empty-state">등록된 게시글이 없습니다.</p>}<nav className="gw-pagination" aria-label="게시글 페이지"><button type="button" disabled={page <= 1} onClick={() => setParams({ q: search, ...(category ? { category } : {}), page: String(page - 1) })}>이전</button><span>{page}페이지</span><button type="button" disabled={posts.items.length < posts.page_size} onClick={() => setParams({ q: search, ...(category ? { category } : {}), page: String(page + 1) })}>다음</button></nav>
+  const type = getBoardType(overview.board.board_type);
+  const isDiscussion = overview.board.board_type === 'discussion';
+  const totalPages = Math.max(1, Math.ceil((posts.total_count ?? posts.items.length) / (posts.page_size || 20)));
+  const selectCategory = (categoryId) => setParams((current) => {
+    if (categoryId) current.set('category', categoryId);
+    else current.delete('category');
+    current.set('page', '1');
+    return current;
+  });
+  return <article className="gw-page" aria-labelledby="board-title"><header className="gw-page-header"><div><span className="gw-eyebrow">{type.label}</span><h1 id="board-title">{overview.board.name}</h1><p>{overview.board.description || type.description}</p><div className="gw-board-access-summary" aria-label="내 게시판 권한"><span>읽기 가능</span><span className={overview.permissions.create ? 'is-allowed' : 'is-denied'}>쓰기 {overview.permissions.create ? '가능' : '불가'}</span><span className={overview.permissions.comment ? 'is-allowed' : 'is-denied'}>댓글 {overview.permissions.comment ? '가능' : '불가'}</span></div></div>{overview.permissions.create && <Link className="gw-primary-button gw-board-write-button" to={`/boards/${boardSlug}/write`}>{isDiscussion ? '새 대화 시작' : '글쓰기'}</Link>}</header>
+    {overview.categories.length > 0 && <nav className="gw-board-category-tabs" aria-label="게시판 카테고리"><button type="button" className={!category ? 'is-active' : ''} aria-pressed={!category} onClick={() => selectCategory(null)}>전체</button>{overview.categories.map((item) => <button type="button" key={item.id} className={category === item.id ? 'is-active' : ''} aria-pressed={category === item.id} onClick={() => selectCategory(item.id)}>{item.name}</button>)}</nav>}
+    {overview.board.settings.search_enabled !== false && <form className="gw-board-toolbar gw-board-toolbar--search-only" onSubmit={(event) => { event.preventDefault(); const value = new FormData(event.currentTarget).get('search'); setParams((current) => { if (value) current.set('q', value); else current.delete('q'); current.set('page', '1'); return current; }); }}><input name="search" defaultValue={search} placeholder="제목과 내용 검색" aria-label="게시판 검색" /><button type="submit">검색</button></form>}
+    <div className={`gw-post-list gw-post-list--${overview.board.board_type}`}>{posts.items.map((post) => <article key={post.id} className={post.is_pinned ? 'is-pinned' : ''}>{overview.board.board_type === 'gallery' && <Link className="gw-gallery-thumbnail" to={`/boards/${boardSlug}/posts/${post.id}`} aria-label={`${post.title} 상세 보기`}>{thumbnails[post.id] ? <img src={thumbnails[post.id]} alt="" /> : <span>대표 이미지 없음</span>}</Link>}{isDiscussion && <div className="gw-discussion-count"><strong>{post.comment_count}</strong><span>댓글</span></div>}<div><span>{post.category ?? post.prefix ?? (post.is_notice ? '공지' : isDiscussion ? '대화' : '일반')}</span><h2><Link to={`/boards/${boardSlug}/posts/${post.id}`}>{post.title}</Link></h2>{isDiscussion && post.excerpt && <p className="gw-discussion-excerpt">{post.excerpt}</p>}<p>{formatAuthor(post, overview.board.settings)} · {new Date(post.created_at).toLocaleDateString('ko-KR')}{overview.board.settings.show_views !== false ? ` · 조회 ${post.view_count}` : ''} · 댓글 {post.comment_count}{isDiscussion && post.last_activity_at ? ` · 최근 활동 ${new Date(post.last_activity_at).toLocaleDateString('ko-KR')}` : ''}</p></div>{post.attachment_count > 0 && <span>첨부 {post.attachment_count}</span>}</article>)}</div>
+    {posts.items.length === 0 && <p className="gw-empty-state">등록된 게시글이 없습니다.</p>}<nav className="gw-pagination" aria-label="게시글 페이지"><button type="button" disabled={page <= 1} onClick={() => setParams({ q: search, ...(category ? { category } : {}), page: String(page - 1) })}>이전</button><span>{page} / {totalPages}페이지 · 총 {posts.total_count ?? posts.items.length}건</span><button type="button" disabled={page >= totalPages} onClick={() => setParams({ q: search, ...(category ? { category } : {}), page: String(page + 1) })}>다음</button></nav>
   </article>;
+}
+
+function formatAuthor(post, settings) {
+  const parts = [post.author_name];
+  if (settings.show_author_department && post.author_department) parts.push(post.author_department);
+  if (settings.show_author_position && post.author_position) parts.push(post.author_position);
+  if (settings.show_author_job_title && post.author_job_title) parts.push(post.author_job_title);
+  return parts.filter(Boolean).join(' · ');
 }

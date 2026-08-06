@@ -22,6 +22,7 @@ docs/PROJECT_MANAGEMENT/
 8. [다음 단계 G4 전자결재 계획](./08_G4_APPROVAL_PLAN.md)
 9. [유지보수·디자인 시스템 계획](./09_MAINTENANCE_AND_DESIGN_PLAN.md)
 10. [남은 위험과 확인 항목](./10_OPEN_ITEMS_AND_RISKS.md)
+11. [게시판 운영 인수 검수 체크리스트](./11_BOARD_ACCEPTANCE_CHECKLIST.md)
 
 ## 문서 역할
 
@@ -35,6 +36,7 @@ docs/PROJECT_MANAGEMENT/
 - `08_G4_APPROVAL_PLAN.md`: 현재 다음 작업인 전자결재의 목표와 범위를 정리한다.
 - `09_MAINTENANCE_AND_DESIGN_PLAN.md`: 그룹웨어 완성 후 공개 사이트와 그룹웨어의 유지보수성을 높이는 계획이다.
 - `10_OPEN_ITEMS_AND_RISKS.md`: 아직 해결하지 않은 항목과 운영 전 확인 사항이다.
+- `11_BOARD_ACCEPTANCE_CHECKLIST.md`: 게시판 유형·권한·직접 접근·모바일 인수 조건을 정의한다.
 
 ## 업데이트 규칙
 
@@ -49,4 +51,4 @@ docs/PROJECT_MANAGEMENT/
 
 ## 기준 시각
 
-마지막 정리 시각: **2026-07-31 19:18 KST**
+마지막 정리 시각: **2026-08-05 KST**

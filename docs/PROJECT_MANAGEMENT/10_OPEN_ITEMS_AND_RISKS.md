@@ -4,12 +4,13 @@
 
 ## 즉시 다음 작업
 
-1. 사용 가능한 AI 모델 확보
-2. `groupware/dashboard-boards`와 HEAD 확인
-3. `groupware/approval` 브랜치 생성
-4. Phase G4 전자결재 착수
+1. Supabase 원격 DB `202608060002_approval_workflow_contract_repair.sql` 적용 완료 확인 및 DB lint (0 error) 검증 완료
+2. 직접·위임 결재자의 제출·승인·반려·보류·회수 v2 RPC 상태 전이 검증 완료
+3. 최고관리자 게시판 생성과 역할·부서·사용자별 권한 시나리오 검증 완료
+4. 1440px·1024px·390px·320px 관리자와 사용자 화면 레이아웃 및 키보드 접근성 통과
+5. Vercel Preview 배포 준비 및 회귀 검증 진행
 
-현재 Gemini 3.1 Pro Preview는 무료 할당량 0으로 HTTP 429가 발생하므로 그대로 재시도하지 않는다.
+Supabase 원격 마이그레이션 목록은 `202607300001`부터 `202608060002`까지 19개 전체가 무결하게 적용된 상태이며, 원격 DB lint error 0건 및 `npx supabase db push --linked --dry-run` upToDate 상태를 확인했다.
 
 ## 기술 위험
 

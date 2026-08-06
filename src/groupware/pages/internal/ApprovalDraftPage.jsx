@@ -1,149 +1,152 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { approvalService } from '../../services/approvalService';
+import { useEffect, useMemo, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 
-const ApprovalDraftPage = ({ isEdit = false }) => {
+import { approvalService } from '../../services/approvalService.js';
+import { useAuth } from '../../context/AuthContext.jsx';
+
+function bodyToText(bodyJson) {
+  return (bodyJson?.content ?? []).flatMap((node) => node.content ?? []).map((node) => node.text ?? '').join('\n');
+}
+
+function textToBody(value) {
+  return { type: 'doc', content: String(value || '').split('\n').map((line) => ({ type: 'paragraph', content: line ? [{ type: 'text', text: line }] : [] })) };
+}
+
+export default function ApprovalDraftPage({ isEdit = false }) {
   const { documentId } = useParams();
   const navigate = useNavigate();
-  const [templates, setTemplates] = useState([]);
-  const [selectedTemplate, setSelectedTemplate] = useState(null);
+  const auth = useAuth();
+  const [catalog, setCatalog] = useState({ templates: [], users: [] });
+  const [selectedTemplateId, setSelectedTemplateId] = useState('');
   const [title, setTitle] = useState('');
+  const [body, setBody] = useState('');
   const [formData, setFormData] = useState({});
+  const [customLines, setCustomLines] = useState(null);
+  const [approverSearch, setApproverSearch] = useState('');
+  const [references, setReferences] = useState([]);
+  const [referenceSearch, setReferenceSearch] = useState('');
+  const [attachmentFiles, setAttachmentFiles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [status, setStatus] = useState('');
 
   useEffect(() => {
-    loadTemplates();
-  }, []);
-
-  const loadTemplates = async () => {
-    try {
-      const data = await approvalService.getTemplates();
-      setTemplates(data);
-      if (data.length > 0) {
-        setSelectedTemplate(data[0]);
+    let active = true;
+    (async () => {
+      try {
+        const nextCatalog = await approvalService.getAuthoringCatalog();
+        if (!active) return;
+        setCatalog(nextCatalog);
+        if (isEdit && documentId) {
+          const documentValue = await approvalService.getDocument(documentId);
+          if (!active) return;
+          setSelectedTemplateId(documentValue.template_id);
+          setTitle(documentValue.title ?? '');
+          setBody(bodyToText(documentValue.revision?.body_json));
+          setFormData(documentValue.revision?.form_data ?? {});
+          const revisionLines = (documentValue.lines ?? []).filter((line) => line.revision_id === documentValue.current_revision_id).sort((a, b) => a.step_order - b.step_order);
+          setCustomLines(revisionLines.map((line, index) => ({ step_order: index + 1, step_kind: line.step_kind, line_mode: line.line_mode, required_count: line.required_count, is_blocking: line.is_blocking, assignee_user_ids: (line.assignees ?? []).map((item) => item.assigned_user_id) })));
+          setReferences((documentValue.references ?? []).map((item) => ({ user_id: item.user_id, reference_type: item.reference_type })));
+        } else {
+          setSelectedTemplateId(nextCatalog.templates[0]?.id ?? '');
+        }
+      } catch (error) {
+        if (active) setStatus(error?.message ?? '기안 작성 정보를 불러오지 못했습니다.');
+      } finally {
+        if (active) setLoading(false);
       }
-    } catch (err) {
-      console.error('Failed to load templates', err);
-    } finally {
-      setLoading(false);
-    }
-  };
+    })();
+    return () => { active = false; };
+  }, [documentId, isEdit]);
 
-  const handleSaveDraft = async () => {
-    if (!selectedTemplate) return;
+  const selectedTemplate = catalog.templates.find((item) => item.id === selectedTemplateId) ?? null;
+  const fields = Array.isArray(selectedTemplate?.version?.form_schema) ? selectedTemplate.version.form_schema : [];
+  const lines = Array.isArray(selectedTemplate?.version?.line_schema) ? selectedTemplate.version.line_schema : [];
+  const userNames = useMemo(() => Object.fromEntries(catalog.users.map((item) => [item.id, item.name])), [catalog.users]);
+  const approverResults = useMemo(() => {
+    const term = approverSearch.trim().toLowerCase();
+    if (term.length < 1) return [];
+    const selected = new Set((customLines ?? []).flatMap((line) => line.assignee_user_ids ?? []));
+    return catalog.users.filter((user) => user.id !== auth.user?.id && !selected.has(user.id) && `${user.name} ${user.department_name ?? ''} ${user.position_name ?? ''}`.toLowerCase().includes(term)).slice(0, 8);
+  }, [approverSearch, catalog.users, customLines, auth.user?.id]);
+  const referenceResults = useMemo(() => {
+    const term = referenceSearch.trim().toLowerCase();
+    if (!term) return [];
+    const selected = new Set(references.map((item) => item.user_id));
+    return catalog.users.filter((user) => user.id !== auth.user?.id && !selected.has(user.id) && `${user.name} ${user.department_name ?? ''} ${user.position_name ?? ''}`.toLowerCase().includes(term)).slice(0, 8);
+  }, [referenceSearch, references, catalog.users, auth.user?.id]);
+
+  const save = async ({ submit = false } = {}) => {
+    if (!selectedTemplate) { setStatus('사용 가능한 결재 양식이 없습니다.'); return; }
+    if (!title.trim()) { setStatus('제목을 입력해 주세요.'); return; }
+    const missingField = fields.find((field) => field.required && !String(formData[field.key] ?? '').trim());
+    if (missingField) { setStatus(`${missingField.label} 항목을 입력해 주세요.`); return; }
     setSubmitting(true);
+    setStatus('');
     try {
-      const doc = await approvalService.createDraft(
-        selectedTemplate.id,
-        selectedTemplate.current_version_id,
-        title || '제목 없음',
-        {}, // bodyJson
-        formData
-      );
-      alert('임시 저장이 완료되었습니다.');
-      navigate(`/approval/documents/${doc.id}/edit`);
-    } catch (err) {
-      alert('저장 실패: ' + err.message);
+      if (customLines && customLines.length === 0) { setStatus('결재자를 한 명 이상 지정해 주세요.'); setSubmitting(false); return; }
+      const savedId = await approvalService.saveDraft({ documentId: isEdit ? documentId : null, templateId: selectedTemplate.id, title: title.trim(), bodyJson: textToBody(body), formData, lineSchemaOverride: customLines });
+      await approvalService.setReferences(savedId, references);
+      for (const file of attachmentFiles) await approvalService.uploadAttachment(savedId, file);
+      if (submit) {
+        await approvalService.submitDocument(savedId);
+        navigate('/approval/outbox');
+      } else {
+        setStatus('임시 저장했습니다. 결재선도 현재 양식 기준으로 준비되었습니다.');
+        if (!isEdit) navigate(`/approval/documents/${savedId}/edit`, { replace: true });
+      }
+    } catch (error) {
+      setStatus(`처리하지 못했습니다. ${error?.message ?? '입력값과 결재선을 확인해 주세요.'}`);
     } finally {
       setSubmitting(false);
     }
   };
 
-  const handleSubmit = async () => {
-    if (!title.trim()) {
-      alert('제목을 입력해주세요.');
-      return;
-    }
-    setSubmitting(true);
-    try {
-      // 1. 먼저 저장 (신규인 경우)
-      let docId = documentId;
-      if (!isEdit) {
-        const doc = await approvalService.createDraft(
-          selectedTemplate.id,
-          selectedTemplate.current_version_id,
-          title,
-          {},
-          formData
-        );
-        docId = doc.id;
-      }
-      
-      // 2. 제출
-      await approvalService.submitDocument(docId);
-      alert('기안서가 성공적으로 제출되었습니다.');
-      navigate('/approval/outbox');
-    } catch (err) {
-      alert('제출 실패: ' + err.message);
-    } finally {
-      setSubmitting(false);
-    }
-  };
+  if (loading) return <p className="gw-empty-state" role="status">기안 작성 화면을 불러오고 있습니다.</p>;
+  if (catalog.templates.length === 0) return <div className="gw-notice gw-notice--warning">게시된 결재 양식이 없습니다. 관리자에게 양식 발행을 요청해 주세요.</div>;
 
-  if (loading) return <div className="gw-loading">로딩 중...</div>;
+  return <article className="gw-approval-page" aria-labelledby="approval-draft-title">
+    <header className="gw-approval-heading"><div><span className="gw-eyebrow">APPROVAL DRAFT</span><h1 id="approval-draft-title">{isEdit ? '기안서 수정' : '새 기안 작성'}</h1><p>양식에 맞춰 내용을 작성하면 결재선이 자동으로 생성됩니다.</p></div><div className="gw-admin-actions"><button className="gw-secondary-button" type="button" disabled={submitting} onClick={() => save()}>임시 저장</button><button className="gw-primary-button" type="button" disabled={submitting} onClick={() => save({ submit: true })}>{submitting ? '처리 중…' : '기안 요청'}</button></div></header>
 
-  return (
-    <div className="gw-content-card max-w-4xl mx-auto">
-      <div className="gw-header-with-actions">
-        <h2 className="gw-heading-xl">{isEdit ? '기안서 수정' : '새 기안 작성'}</h2>
-        <div className="gw-button-group">
-          <button 
-            className="gw-button-secondary" 
-            onClick={handleSaveDraft}
-            disabled={submitting}
-          >
-            임시 저장
-          </button>
-          <button 
-            className="gw-button-primary"
-            onClick={handleSubmit}
-            disabled={submitting}
-          >
-            기안 요청
-          </button>
-        </div>
-      </div>
+    <section className="gw-approval-card"><div className="gw-admin-form-grid"><label className="gw-field"><span>결재 양식</span><select value={selectedTemplateId} disabled={isEdit} onChange={(event) => { setSelectedTemplateId(event.target.value); setFormData({}); setCustomLines(null); }}>{catalog.templates.map((item) => <option key={item.id} value={item.id}>{item.category_name} · {item.name}</option>)}</select></label><label className="gw-field gw-field--full"><span>제목</span><input maxLength="240" value={title} onChange={(event) => setTitle(event.target.value)} placeholder="기안서 제목" /></label></div></section>
 
-      <div className="mt-6 space-y-6">
-        <div className="gw-form-field">
-          <label className="gw-label">결재 양식</label>
-          <select 
-            className="gw-input" 
-            value={selectedTemplate?.id || ''}
-            onChange={(e) => setSelectedTemplate(templates.find(t => t.id === e.target.value))}
-            disabled={isEdit}
-          >
-            {templates.map(t => (
-              <option key={t.id} value={t.id}>{t.name}</option>
-            ))}
-          </select>
-        </div>
+    <section className="gw-approval-card"><div className="gw-approval-card-heading"><div><h2>결재선 지정</h2><p>양식 기본 결재선을 사용하거나 이름·부서·직급으로 결재자를 직접 찾을 수 있습니다.</p></div><button className="gw-secondary-button" type="button" onClick={() => { setCustomLines((current) => current === null ? [] : null); setApproverSearch(''); }}>{customLines === null ? '직접 지정' : '양식 기본값 사용'}</button></div>{customLines === null ? <div className="gw-approval-line-preview">{lines.map((line, index) => <div key={`${line.step_order}-${index}`}><span>{line.step_order ?? index + 1}</span><div><strong>{stepKindLabel(line.step_kind)}</strong><p>{lineTargetLabel(line, userNames)} · {lineModeLabel(line)}</p></div></div>)}</div> : <><label className="gw-field gw-approver-search"><span>결재자 이름 조회</span><input value={approverSearch} onChange={(event) => setApproverSearch(event.target.value)} placeholder="이름, 부서 또는 직급 입력" autoComplete="off" /></label>{approverResults.length > 0 && <div className="gw-approver-results">{approverResults.map((user) => <button type="button" key={user.id} onClick={() => { setCustomLines((current) => [...current, { step_order: current.length + 1, step_kind: 'approval', line_mode: 'sequential', required_count: 1, is_blocking: true, assignee_user_ids: [user.id] }]); setApproverSearch(''); }}><strong>{user.name}</strong><span>{user.department_name ?? '소속 미등록'} · {user.position_name ?? '직급 미등록'}</span></button>)}</div>}<div className="gw-custom-approval-lines">{customLines.map((line, index) => { const user = catalog.users.find((item) => item.id === line.assignee_user_ids?.[0]); return <div key={`${line.assignee_user_ids?.[0]}-${index}`}><span>{index + 1}</span><div><strong>{user?.name ?? '지정 사용자'}</strong><small>{user?.department_name ?? '소속 미등록'} · {user?.position_name ?? '직급 미등록'}</small></div><div className="gw-admin-actions"><button type="button" disabled={index === 0} onClick={() => setCustomLines(moveItem(customLines, index, index - 1))}>위로</button><button type="button" disabled={index === customLines.length - 1} onClick={() => setCustomLines(moveItem(customLines, index, index + 1))}>아래로</button><button type="button" onClick={() => setCustomLines(customLines.filter((_, itemIndex) => itemIndex !== index))}>삭제</button></div></div>; })}</div>{customLines.length === 0 && <p className="gw-empty-state">위 검색창에서 결재자를 순서대로 추가해 주세요.</p>}</>}</section>
 
-        <div className="gw-form-field">
-          <label className="gw-label">제목</label>
-          <input 
-            type="text" 
-            className="gw-input" 
-            placeholder="기안서 제목을 입력하세요"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-          />
-        </div>
+    <section className="gw-approval-card"><h2>양식 입력</h2><div className="gw-approval-form-grid">{fields.map((field) => <ApprovalField key={field.key} field={field} value={formData[field.key] ?? ''} onChange={(value) => setFormData((current) => ({ ...current, [field.key]: value }))} />)}</div><label className="gw-field"><span>상세 내용</span><textarea value={body} onChange={(event) => setBody(event.target.value)} placeholder="기안 배경, 요청 사항과 참고 내용을 작성하세요." /></label></section>
 
-        <div className="border rounded-lg p-6 bg-gray-50">
-          <p className="text-center text-gray-500">양식에 따른 상세 입력 필드가 여기에 표시됩니다.</p>
-        </div>
+    <section className="gw-approval-card"><h2>참조·열람자</h2><label className="gw-field"><span>직원 조회</span><input value={referenceSearch} onChange={(event) => setReferenceSearch(event.target.value)} placeholder="이름, 부서 또는 직급 입력" /></label>{referenceResults.length > 0 && <div className="gw-approver-results">{referenceResults.map((user) => <button type="button" key={user.id} onClick={() => { setReferences((current) => [...current, { user_id: user.id, reference_type: 'reference' }]); setReferenceSearch(''); }}><strong>{user.name}</strong><span>{user.department_name ?? '소속 미등록'} · {user.position_name ?? '직급 미등록'}</span></button>)}</div>}<div className="gw-reference-chips">{references.map((item) => { const user = catalog.users.find((candidate) => candidate.id === item.user_id); return <div key={item.user_id}><strong>{user?.name ?? '사용자'}</strong><select aria-label={`${user?.name ?? '사용자'} 권한`} value={item.reference_type} onChange={(event) => setReferences((current) => current.map((candidate) => candidate.user_id === item.user_id ? { ...candidate, reference_type: event.target.value } : candidate))}><option value="reference">참조</option><option value="reader">열람</option></select><button type="button" onClick={() => setReferences((current) => current.filter((candidate) => candidate.user_id !== item.user_id))}>삭제</button></div>; })}</div></section>
 
-        <div className="mt-8 border-t pt-6">
-          <h3 className="gw-heading-md mb-4">결재선 설정</h3>
-          <div className="gw-empty-state py-4">
-            <p className="text-sm">양식별 기본 결재선이 자동으로 구성됩니다.</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
+    <section className="gw-approval-card"><h2>첨부파일</h2><label className="gw-field"><span>파일 선택(최대 10개, 파일당 20MB)</span><input type="file" multiple accept=".pdf,.jpg,.jpeg,.png,.webp,.txt,.zip,.docx,.xlsx" onChange={(event) => setAttachmentFiles(Array.from(event.target.files ?? []).slice(0, 10))} /></label>{attachmentFiles.length > 0 && <ul className="gw-file-selection">{attachmentFiles.map((file) => <li key={`${file.name}-${file.size}`}><span>{file.name}</span><small>{formatBytes(file.size)}</small></li>)}</ul>}</section>
 
-export default ApprovalDraftPage;
+    {status && <p className="gw-form-status" role="status">{status}</p>}
+  </article>;
+}
+
+function moveItem(items, from, to) {
+  const next = [...items];
+  const [item] = next.splice(from, 1);
+  next.splice(to, 0, item);
+  return next.map((line, index) => ({ ...line, step_order: index + 1 }));
+}
+
+function formatBytes(value) {
+  if (value < 1024) return `${value} B`;
+  if (value < 1048576) return `${(value / 1024).toFixed(1)} KB`;
+  return `${(value / 1048576).toFixed(1)} MB`;
+}
+
+function ApprovalField({ field, value, onChange }) {
+  const common = { required: Boolean(field.required), value, onChange: (event) => onChange(event.target.value) };
+  if (field.type === 'textarea') return <label className="gw-field gw-field--full"><span>{field.label}{field.required ? ' *' : ''}</span><textarea {...common} /></label>;
+  if (field.type === 'select') return <label className="gw-field"><span>{field.label}{field.required ? ' *' : ''}</span><select {...common}><option value="">선택</option>{(field.options ?? []).map((option) => <option key={option.value ?? option} value={option.value ?? option}>{option.label ?? option}</option>)}</select></label>;
+  return <label className="gw-field"><span>{field.label}{field.required ? ' *' : ''}</span><input type={['number','date','text'].includes(field.type) ? field.type : 'text'} {...common} /></label>;
+}
+
+const stepKindLabel = (kind) => ({ approval: '결재', agreement: '합의', cooperation: '협조' }[kind] ?? kind);
+const lineModeLabel = (line) => line.line_mode === 'parallel_required_count' ? `${line.required_count ?? 1}명 승인` : line.line_mode === 'parallel_all' ? '전원 승인' : '순차 처리';
+function lineTargetLabel(line, userNames) {
+  if (Array.isArray(line.assignee_user_ids)) return line.assignee_user_ids.map((id) => userNames[id] ?? '지정 사용자').join(', ');
+  if (line.target_type === 'management') return '관리자 중 1명';
+  if (line.target_type === 'drafter_department_head') return '기안자 부서장';
+  return line.target_id || '양식 지정 대상';
+}

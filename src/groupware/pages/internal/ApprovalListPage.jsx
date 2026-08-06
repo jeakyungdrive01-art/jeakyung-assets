@@ -22,6 +22,10 @@ const ApprovalListPage = ({ type }) => {
         setDocuments(inbox);
         return;
       }
+      if (type === 'references') {
+        setDocuments(await approvalService.getReferences());
+        return;
+      }
 
       const {
         data: { user },
@@ -60,14 +64,6 @@ const ApprovalListPage = ({ type }) => {
           ]);
       } else if (type === 'completed') {
         query = query.eq('status', 'approved');
-      } else if (type === 'references') {
-        query = query.in('status', [
-          'submitted',
-          'in_progress',
-          'held',
-          'approved',
-          'rejected'
-        ]);
       }
 
       const { data, error } = await query;
@@ -124,42 +120,36 @@ const ApprovalListPage = ({ type }) => {
   };
 
   return (
-    <div className="gw-content-card">
-      <div className="gw-header-with-actions mb-6">
-        <h2 className="gw-heading-xl">{getTitle()}</h2>
-
-        <Link to="/approval/new" className="gw-button-primary">
-          <span className="material-symbols-outlined">add</span>
-          새 기안
-        </Link>
-      </div>
+    <article className="gw-approval-page" aria-labelledby="approval-list-title">
+      <header className="gw-approval-heading">
+        <div>
+          <span className="gw-eyebrow">E-APPROVAL</span>
+          <h1 id="approval-list-title">{getTitle()}</h1>
+          <p>권한이 있는 결재 문서를 최신 순서로 확인합니다.</p>
+        </div>
+        <Link to="/approval/new" className="gw-primary-button">새 기안 작성</Link>
+      </header>
 
       {loading ? (
-        <div className="gw-loading">불러오는 중...</div>
+        <div className="gw-approval-card gw-loading">불러오는 중…</div>
       ) : errorMessage ? (
-        <div className="gw-empty-state">
-          <span className="material-symbols-outlined gw-empty-icon">
-            error
-          </span>
+        <div className="gw-approval-card gw-empty-state">
           <p>{errorMessage}</p>
           <button
             type="button"
-            className="gw-button-secondary mt-4"
+            className="gw-secondary-button"
             onClick={loadDocuments}
           >
             다시 시도
           </button>
         </div>
       ) : documents.length === 0 ? (
-        <div className="gw-empty-state">
-          <span className="material-symbols-outlined gw-empty-icon">
-            description
-          </span>
+        <div className="gw-approval-card gw-empty-state">
           <p>문서가 없습니다.</p>
         </div>
       ) : (
-        <div className="gw-table-container">
-          <table className="gw-table">
+        <div className="gw-approval-card gw-approval-table-wrap">
+          <table className="gw-approval-table">
             <thead>
               <tr>
                 <th>문서번호</th>
@@ -174,7 +164,7 @@ const ApprovalListPage = ({ type }) => {
             <tbody>
               {documents.map((document) => (
                 <tr key={`${document.id}-${document.assignee_id || ''}`}>
-                  <td className="whitespace-nowrap text-xs text-gray-500">
+                  <td>
                     {document.document_number || '미발급'}
                   </td>
 
@@ -183,29 +173,29 @@ const ApprovalListPage = ({ type }) => {
                   <td>
                     <Link
                       to={`/approval/documents/${document.id}`}
-                      className="font-medium hover:text-blue-600"
+                      className="gw-approval-document-link"
+                      onClick={() => document.reference_id && !document.read_at && approvalService.markReferenceRead(document.reference_id).catch(() => {})}
                     >
                       {document.title || '제목 없음'}
                     </Link>
 
                     {document.is_delegated && (
-                      <span className="gw-badge ml-2 bg-purple-100 text-purple-700">
+                      <span className="gw-approval-delegated">
                         위임
                       </span>
                     )}
+                    {document.reference_id && !document.read_at && <span className="gw-approval-delegated">새 문서</span>}
                   </td>
 
                   <td>{getDrafterName(document)}</td>
 
-                  <td className="whitespace-nowrap">
+                  <td>
                     {getDocumentDate(document)}
                   </td>
 
                   <td>
                     <span
-                      className={`gw-badge ${getStatusBadgeClass(
-                        document.status
-                      )}`}
+                      className={`gw-approval-status is-${document.status}`}
                     >
                       {getStatusLabel(document.status)}
                     </span>
@@ -216,23 +206,8 @@ const ApprovalListPage = ({ type }) => {
           </table>
         </div>
       )}
-    </div>
+    </article>
   );
-};
-
-const getStatusBadgeClass = (status) => {
-  const classes = {
-    draft: 'bg-gray-100 text-gray-700',
-    submitted: 'bg-blue-100 text-blue-700',
-    in_progress: 'bg-blue-100 text-blue-700',
-    held: 'bg-yellow-100 text-yellow-800',
-    approved: 'bg-green-100 text-green-700',
-    rejected: 'bg-red-100 text-red-700',
-    recalled: 'bg-orange-100 text-orange-700',
-    canceled: 'bg-gray-100 text-gray-600'
-  };
-
-  return classes[status] || 'bg-gray-100 text-gray-700';
 };
 
 const getStatusLabel = (status) => {

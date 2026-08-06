@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 
 import MembershipApprovalPanel from '../../components/admin/MembershipApprovalPanel.jsx';
 import OrganizationManagementPanel from '../../components/admin/OrganizationManagementPanel.jsx';
@@ -36,7 +37,7 @@ export default function AdminPage() {
           <h1 id="page-title">관리자</h1>
           <p>회원·조직, 시스템 사용량과 대시보드·게시판 구성을 서버 권한 검증과 감사 로그를 거쳐 관리합니다.</p>
         </div>
-        <span className="gw-phase-badge">G3 대시보드·게시판</span>
+        <div className="gw-admin-actions"><Link className="gw-primary-button" to="/admin/boards">게시판 관리</Link><Link className="gw-secondary-button" to="/admin/popups">팝업 문서 관리</Link><span className="gw-phase-badge">G3 대시보드·게시판</span></div>
       </header>
       {error && <div className="gw-notice gw-notice--warning" role="alert">{error}</div>}
       {loading ? (

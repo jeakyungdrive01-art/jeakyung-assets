@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { NavLink, Outlet, useLocation } from 'react-router-dom';
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 
 import GroupwareBrand from '../components/GroupwareBrand.jsx';
 import NavigationIcon from '../components/NavigationIcon.jsx';
@@ -7,13 +7,24 @@ import ProfileAvatar from '../components/profile/ProfileAvatar.jsx';
 import UserAccountMenu from '../components/profile/UserAccountMenu.jsx';
 import { GROUPWARE_NAVIGATION, getRouteTitle } from '../config/navigation.js';
 import { useAuth } from '../context/AuthContext.jsx';
-import { getVisibleBoards } from '../services/boardService.js';
+import { supabase } from '../lib/supabase.js';
+import { BOARD_CATALOG_CHANGED_EVENT, getVisibleBoards } from '../services/boardService.js';
+import { APPROVAL_STATE_CHANGED_EVENT, approvalService } from '../services/approvalService.js';
+import PopupLayer from '../../shared/popup/PopupLayer.jsx';
 
 const MOBILE_QUERY = '(max-width: 1023px)';
+
+function getPopupTarget(pathname) {
+  if (pathname.startsWith('/admin')) return 'groupware_admin';
+  if (pathname.startsWith('/approval')) return 'groupware_approval';
+  if (pathname.startsWith('/boards')) return 'groupware_boards';
+  return 'groupware_dashboard';
+}
 
 export default function AppShell() {
   const auth = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
   const menuButtonRef = useRef(null);
   const firstMenuRef = useRef(null);
   const [collapsed, setCollapsed] = useState(false);
@@ -21,6 +32,8 @@ export default function AppShell() {
   const [isMobile, setIsMobile] = useState(() => window.matchMedia(MOBILE_QUERY).matches);
   const [signOutError, setSignOutError] = useState('');
   const [boards, setBoards] = useState([]);
+  const [headerState, setHeaderState] = useState({ approval_pending: 0, unread_count: 0, notifications: [] });
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
 
   const visibleNavigation = useMemo(
     () => GROUPWARE_NAVIGATION.filter((item) => !item.requiredPermission || auth.permissions.includes(item.requiredPermission)),
@@ -67,8 +80,22 @@ export default function AppShell() {
 
   useEffect(() => {
     if (auth.status !== 'approved') { setBoards([]); return; }
-    getVisibleBoards().then(setBoards).catch(() => setBoards([]));
+    const loadBoards = () => getVisibleBoards().then(setBoards).catch(() => setBoards([]));
+    loadBoards();
+    window.addEventListener(BOARD_CATALOG_CHANGED_EVENT, loadBoards);
+    return () => window.removeEventListener(BOARD_CATALOG_CHANGED_EVENT, loadBoards);
   }, [auth.status, auth.activeRole, location.pathname]);
+
+  useEffect(() => {
+    if (auth.status !== 'approved') { setHeaderState({ approval_pending: 0, unread_count: 0, notifications: [] }); return undefined; }
+    let active = true;
+    const loadHeader = () => approvalService.getHeaderState().then((value) => active && setHeaderState(value)).catch(() => {});
+    loadHeader();
+    const timer = window.setInterval(loadHeader, 60000);
+    window.addEventListener(APPROVAL_STATE_CHANGED_EVENT, loadHeader);
+    const channel = supabase.channel(`groupware-notifications-${auth.user?.id}`).on('postgres_changes', { event: '*', schema: 'public', table: 'groupware_notifications', filter: `user_id=eq.${auth.user?.id}` }, loadHeader).subscribe();
+    return () => { active = false; window.clearInterval(timer); window.removeEventListener(APPROVAL_STATE_CHANGED_EVENT, loadHeader); supabase.removeChannel(channel); };
+  }, [auth.status, auth.user?.id, location.pathname]);
 
   const boardGroups = useMemo(() => boards.reduce((result, board) => {
     const group = board.group_name ?? '기타';
@@ -85,6 +112,7 @@ export default function AppShell() {
 
   return (
     <div className={`gw-app-shell${collapsed ? ' gw-app-shell--collapsed' : ''}`}>
+      <PopupLayer client={supabase} target={getPopupTarget(location.pathname)} />
       <a className="gw-skip-link" href="#groupware-content">본문으로 바로가기</a>
       <aside
         className={`gw-sidebar${drawerOpen ? ' is-open' : ''}`}
@@ -108,6 +136,7 @@ export default function AppShell() {
               >
                 <NavigationIcon name={item.key} />
                 <span>{item.label}</span>
+                {item.key === 'approval' && headerState.approval_pending > 0 && <span className="gw-nav-count" aria-label={`결재 대기 ${headerState.approval_pending}건`}>{headerState.approval_pending}</span>}
               </NavLink>
               {item.key === 'boards' && !collapsed && boards.length > 0 && (
                 <div className="gw-board-nav" aria-label="내 게시판">
@@ -140,7 +169,7 @@ export default function AppShell() {
           </div>
           <div className="gw-topbar-tools" aria-label="사용자와 업무 도구">
             <button type="button" disabled title="검색 기능은 추후 제공됩니다"><span aria-hidden="true">⌕</span><span className="gw-tool-label">검색</span></button>
-            <button type="button" disabled title="알림 기능은 추후 제공됩니다"><span aria-hidden="true">♢</span><span className="gw-tool-label">알림</span></button>
+            <div className="gw-notification-menu"><button type="button" aria-expanded={notificationsOpen} aria-controls="groupware-notification-panel" title="개인 알림" onClick={() => setNotificationsOpen((current) => !current)}><span aria-hidden="true">●</span><span className="gw-tool-label">알림</span>{headerState.unread_count > 0 && <span className="gw-topbar-count">{headerState.unread_count}</span>}</button>{notificationsOpen && <div className="gw-notification-panel" id="groupware-notification-panel"><header><strong>개인 알림</strong>{headerState.unread_count > 0 && <button type="button" onClick={async () => { await approvalService.markNotificationRead(); setHeaderState((current) => ({ ...current, unread_count: 0, notifications: current.notifications.map((item) => ({ ...item, read_at: item.read_at ?? new Date().toISOString() })) })); }}>모두 읽음</button>}</header><div>{headerState.notifications.map((item) => <button type="button" className={item.read_at ? '' : 'is-unread'} key={item.id} onClick={async () => { if (!item.read_at) await approvalService.markNotificationRead(item.id); setNotificationsOpen(false); if (item.route) navigate(item.route); }}><strong>{item.title}</strong><span>{item.message}</span><time>{new Date(item.created_at).toLocaleString('ko-KR')}</time></button>)}</div>{headerState.notifications.length === 0 && <p>새 알림이 없습니다.</p>}</div>}</div>
             <UserAccountMenu onSignOutError={setSignOutError} />
           </div>
         </header>

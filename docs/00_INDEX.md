@@ -22,6 +22,7 @@
 | [`31_SECURITY_AND_RLS.md`](31_SECURITY_AND_RLS.md) | RLS, 서버 함수, 비밀정보와 감사 기준 | G2 기본 정책 작성 |
 | [`32_ADMIN_SYSTEM.md`](32_ADMIN_SYSTEM.md) | 관리자 기능, 보관과 안전한 삭제 절차 | G2 회원·조직 UI 구현 |
 | [`33_MAIL_INTEGRATION.md`](33_MAIL_INTEGRATION.md) | IWINV Terra Mail 연동 우선순위와 보안 | 확정·연동 대기 |
+| [`34_POPUP_DOCUMENTS.md`](34_POPUP_DOCUMENTS.md) | 관리자 팝업 문서 작성·예약·공개/그룹웨어 노출 기준 | 구현·DB 적용 대기 |
 
 ## 보조 문서
 

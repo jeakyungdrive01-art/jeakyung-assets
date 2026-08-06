@@ -4,6 +4,9 @@ const BUCKET = 'groupware-board-attachments';
 const SAFE_FILE = /[^a-zA-Z0-9._-]+/g;
 const BLOCKED_EXTENSIONS = /\.(exe|dll|bat|cmd|com|scr|msi|js|jar|sh|ps1)$/i;
 
+export const BOARD_CATALOG_CHANGED_EVENT = 'groupware:boards-changed';
+export const notifyBoardCatalogChanged = () => window.dispatchEvent(new CustomEvent(BOARD_CATALOG_CHANGED_EVENT));
+
 async function rpc(name, params = {}) {
   const { data, error } = await requireSupabase().rpc(name, params);
   if (error) throw error;
@@ -58,7 +61,7 @@ export async function uploadBoardAttachment({ boardId, postId, file, userId, max
   const { error: uploadError } = await client.storage.from(BUCKET).upload(storagePath, file, { contentType: file.type || 'application/octet-stream', upsert: false });
   if (uploadError) throw uploadError;
   try {
-    await rpc('register_board_attachment', {
+    const attachmentId = await rpc('register_board_attachment', {
       p_board_id: boardId,
       p_post_id: postId,
       p_storage_path: storagePath,
@@ -66,6 +69,13 @@ export async function uploadBoardAttachment({ boardId, postId, file, userId, max
       p_mime_type: file.type || 'application/octet-stream',
       p_file_size: file.size,
     });
+    return {
+      id: attachmentId,
+      original_name: file.name,
+      mime_type: file.type || 'application/octet-stream',
+      file_size: file.size,
+      purpose: 'general_attachment',
+    };
   } catch (error) {
     await client.storage.from(BUCKET).remove([storagePath]);
     throw error;

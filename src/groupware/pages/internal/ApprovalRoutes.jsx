@@ -6,6 +6,7 @@ import ApprovalListPage from './ApprovalListPage';
 import ApprovalDocumentPage from './ApprovalDocumentPage';
 import ApprovalAdminPage from './ApprovalAdminPage';
 import ApprovalDelegationsPage from './ApprovalDelegationsPage';
+import ApprovalCredentialsPage from './ApprovalCredentialsPage';
 
 const ApprovalRoutes = () => {
   return (
@@ -18,6 +19,7 @@ const ApprovalRoutes = () => {
       <Route path="completed" element={<ApprovalListPage type="completed" />} />
       <Route path="references" element={<ApprovalListPage type="references" />} />
       <Route path="delegations" element={<ApprovalDelegationsPage />} />
+      <Route path="credentials" element={<ApprovalCredentialsPage />} />
       <Route path="documents/:documentId" element={<ApprovalDocumentPage />} />
       <Route path="documents/:documentId/edit" element={<ApprovalDraftPage isEdit={true} />} />
       <Route path="admin/*" element={<ApprovalAdminPage />} />

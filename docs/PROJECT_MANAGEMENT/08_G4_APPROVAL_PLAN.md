@@ -2,7 +2,44 @@
 
 [문서 목록](./00_INDEX.md) · [현재 상태](./02_CURRENT_STATUS.md) · [전체 계획](./03_MASTER_PLAN.md)
 
-상태: **G4-1 보안 기반 및 결재함 구현 완료, 로컬 마이그레이션 검증 완료**
+상태: **G4 전자결재 실사용 기능 로컬 구현 완료, 통합 DB 적용 검증 대기**
+
+## G4-2 로컬 구현 (2026-08-05)
+
+추가 마이그레이션:
+
+```text
+202607310012_groupware_approval_workflow_guards_pending.sql
+202608050003_approval_workflow_delivery.sql
+202608050004_approval_signatures_notifications.sql
+```
+
+완료 범위:
+
+- 관리자 분류·양식·동적 필드·기본 결재선 설정과 버전 발행
+- 일반 품의서 예시 양식
+- 서버 트랜잭션 기반 임시 저장, Revision과 결재선 Snapshot 생성
+- 연도별 중복 방지 문서번호 발급과 제출
+- 순차·병렬 전체·필수 인원 결재 진행
+- 승인·반려·보류·보류 해제·회수·보관
+- 본인 결재와 차례가 아닌 처리 차단
+- 결재 요청·승인·반려·보류 내부 알림
+- 실제 데이터 기반 결재 홈, 결재함, 문서 상세와 처리 이력
+- 관리자 경로 `/groupware/approval/admin/templates`
+- 이름·부서·직급 검색형 사용자 지정 결재선과 순서 변경
+- 개인 도장 이미지·직접 그린 서명 등록, 승인 시 사용 표시 Snapshot 기록
+- 전자결재 메뉴 원형 대기 건수와 상단 개인 알림·읽음 처리
+- 기간·범위별 대결·위임 등록과 해제
+
+2026-08-06 추가 완료:
+
+- 기안 첨부파일 최대 10개, 파일당 20MB 비공개 업로드·다운로드·초안 삭제
+- 문서 참여자 의견 등록과 작성자 삭제
+- 이름 검색형 참조·열람자 지정, 참조함과 읽음 처리·알림
+- 결재 문서 인쇄 최적화
+- 활성 최고관리자의 사유 필수 강제 취소와 감사·알림
+
+추가 마이그레이션은 `202608060001_approval_completion.sql`이다. 현재 환경에는 Docker 또는 Podman이 없어 신규 마이그레이션 전체 재적용은 대기 중이며 원격 Supabase 적용 여부도 별도로 확인한다.
 
 ## 현재 기준
 
@@ -257,6 +294,10 @@ groupware-approval-attachments
 202607310009_groupware_approval_notifications_storage.sql
 202607310010_groupware_approval_security_logic.sql
 202607310011_groupware_approval_rls_inbox.sql
+202607310012_groupware_approval_workflow_guards_pending.sql
+202608050003_approval_workflow_delivery.sql
+202608050004_approval_signatures_notifications.sql
+202608060001_approval_completion.sql
 ```
 
 원격 적용은 아직 하지 않았다.
