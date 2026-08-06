@@ -109,6 +109,67 @@ export default function ApprovalDocumentPage() {
     </header>
     {error && <div className="gw-notice gw-notice--warning" role="alert">{error}</div>}
 
+    {/* 우측 정렬 결재란 (기안/결재/결재 칸칸이 출력) & 참조자 (칸 없이 이름만) */}
+    <section className="gw-approval-card gw-stamp-section">
+      <div className="gw-stamp-container">
+        <div className="gw-stamp-grid">
+          {/* 기안자 박스 */}
+          <div className="gw-stamp-box">
+            <div className="gw-stamp-header">기안</div>
+            <div className="gw-stamp-body">
+              <span className="gw-stamp-pos">{doc.revision?.drafter_snapshot?.position_name || doc.revision?.drafter_snapshot?.department_name || '기안자'}</span>
+              <strong className="gw-stamp-name">{doc.revision?.drafter_snapshot?.name ?? '-'}</strong>
+              <div className="gw-stamp-status is-approved">
+                <span className="gw-stamp-badge">기안</span>
+                <small>{doc.submitted_at ? new Date(doc.submitted_at).toLocaleDateString('ko-KR') : new Date(doc.created_at).toLocaleDateString('ko-KR')}</small>
+              </div>
+            </div>
+          </div>
+
+          {/* 결재자 박스들 (우측으로 칸칸이 출력) */}
+          {currentLines.map((line) => {
+            const assignee = line.assignees?.[0];
+            const name = assignee?.assignee_snapshot?.name ?? '결재자';
+            const pos = assignee?.assignee_snapshot?.position_name || assignee?.assignee_snapshot?.department_name || '결재자';
+            const matchedAction = (doc.actions || []).find((a) => a.actor_user_id === assignee?.assignee_user_id && a.action_type === 'approve');
+            const stampUrl = matchedAction?.credential_snapshot?.preview_url;
+
+            return (
+              <div key={line.id} className={`gw-stamp-box is-${assignee?.status || line.status}`}>
+                <div className="gw-stamp-header">{stepKindLabel(line.step_kind)}</div>
+                <div className="gw-stamp-body">
+                  <span className="gw-stamp-pos">{pos}</span>
+                  <strong className="gw-stamp-name">{name}</strong>
+                  <div className={`gw-stamp-status is-${assignee?.status || 'waiting'}`}>
+                    {stampUrl ? (
+                      <img src={stampUrl} alt="서명/도장" className="gw-stamp-img" />
+                    ) : (
+                      <span className="gw-stamp-badge">{assigneeStatusLabel(assignee?.status || 'waiting')}</span>
+                    )}
+                    {matchedAction?.created_at && (
+                      <small>{new Date(matchedAction.created_at).toLocaleDateString('ko-KR')}</small>
+                    )}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* 참조자: 칸은 없고 이름만 출력 */}
+      {Array.isArray(doc.references) && doc.references.length > 0 && (
+        <div className="gw-approval-reference-plain">
+          <strong className="gw-ref-title">참조:</strong>{' '}
+          <span className="gw-ref-names">
+            {doc.references
+              .map((ref) => `${ref.user_name || ref.name || '참조자'}${ref.position_name ? ` ${ref.position_name}` : ''}${ref.department_name ? ` (${ref.department_name})` : ''}`)
+              .join(', ')}
+          </span>
+        </div>
+      )}
+    </section>
+
     <section className="gw-approval-card"><div className="gw-approval-facts"><div><span>기안자</span><strong>{doc.revision?.drafter_snapshot?.name ?? '-'}</strong></div><div><span>소속</span><strong>{doc.revision?.drafter_snapshot?.department_name ?? '-'}</strong></div><div><span>문서 상태</span><strong>{statusLabel(doc.status)}</strong></div><div><span>현재 단계</span><strong>{doc.current_step_order || '-'}</strong></div></div></section>
 
     {Object.keys(doc.revision?.form_data ?? {}).length > 0 && <section className="gw-approval-card"><h2>양식 내용</h2><dl className="gw-approval-form-data">{Object.entries(doc.revision.form_data).map(([key, value]) => <div key={key}><dt>{formLabels[key] ?? key}</dt><dd>{String(value || '-')}</dd></div>)}</dl></section>}

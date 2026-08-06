@@ -292,51 +292,11 @@ export default function ApprovalDraftPage({ isEdit = false }) {
         <div className="gw-approval-card-heading">
           <div>
             <h2>결재선 지정</h2>
-            <p>자주 쓰는 결재선을 불러오거나, 추천 결재자(대표이사/이사/지사장/팀장 등) 및 직원을 선택하여 지정할 수 있습니다.</p>
+            <p>등록된 직원을 콤보박스 목록에서 바로 선택하거나 추천 결재자(대표이사/이사/지사장/팀장 등)를 클릭하여 지정할 수 있습니다.</p>
           </div>
           <button className="gw-secondary-button" type="button" onClick={() => { setCustomLines((cur) => cur === null ? [] : null); setApproverSearch(''); }}>
             {customLines === null ? '직접 지정' : '양식 기본값 사용'}
           </button>
-        </div>
-
-        {/* 결재선 불러오기 / 저장 Combobox Toolbar */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.85rem', flexWrap: 'wrap', padding: '0.5rem 0.75rem', background: 'var(--gw-background)', borderRadius: '8px', border: '1px solid var(--gw-border)' }}>
-          <span style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--gw-navy-950)' }}>📁 결재선 콤보박스:</span>
-          <select
-            style={{ padding: '0.4rem 0.6rem', fontSize: '0.85rem', borderRadius: '6px', border: '1px solid var(--gw-border)', flex: '1', minWidth: '220px', background: '#fff', cursor: 'pointer' }}
-            onChange={(e) => {
-              const val = e.target.value;
-              if (!val) return;
-              if (val === 'recent') {
-                try {
-                  const rec = JSON.parse(localStorage.getItem('jeakyung-approval-recent') || 'null');
-                  if (rec) applyPreset(rec);
-                } catch {}
-              } else {
-                const found = savedPresets.find((p) => p.id === val);
-                if (found) applyPreset(found);
-              }
-              e.target.value = '';
-            }}
-          >
-            <option value="">-- 자주 쓰는 / 최근 결재선 선택 --</option>
-            {Boolean(localStorage.getItem('jeakyung-approval-recent')) && (
-              <option value="recent">⏱️ 최근 제출 결재선</option>
-            )}
-            {savedPresets.map((preset) => (
-              <option key={preset.id} value={preset.id}>⭐ {preset.name}</option>
-            ))}
-          </select>
-          {customLines !== null && customLines.length > 0 && (
-            <button
-              type="button"
-              className="gw-secondary-button"
-              style={{ fontSize: '0.8rem', padding: '0.35rem 0.65rem' }}
-              onClick={saveCurrentPreset}
-            >
-              ⭐ 현재 결재선 저장
-            </button>
-          )}
         </div>
 
         {customLines === null ? (
@@ -357,7 +317,7 @@ export default function ApprovalDraftPage({ isEdit = false }) {
             {executiveUsers.length > 0 && (
               <div style={{ marginBottom: '0.85rem', padding: '0.65rem 0.85rem', background: '#f5f7ff', borderRadius: '8px', border: '1px solid #dce4ff' }}>
                 <span style={{ display: 'block', fontSize: '0.8rem', fontWeight: '700', color: 'var(--gw-blue-700)', marginBottom: '0.4rem' }}>
-                  👔 주요 결재자 (대표이사·이사·지사장·팀장 등) 목록에서 바로 선택
+                  👔 주요 결재자 (대표이사·이사·지사장·팀장 등) 빠른 선택
                 </span>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
                   {executiveUsers.map((user) => (
@@ -377,23 +337,28 @@ export default function ApprovalDraftPage({ isEdit = false }) {
               </div>
             )}
 
-            <label className="gw-field gw-approver-search">
-              <span>직원 직접 검색</span>
-              <input value={approverSearch} onChange={(event) => setApproverSearch(event.target.value)} placeholder="이름, 부서 또는 직급 입력" autoComplete="off" />
+            {/* 결재자 콤보박스 선택 */}
+            <label className="gw-field">
+              <span>결재자 선택 (등록된 직원 콤보박스)</span>
+              <select
+                onChange={(event) => {
+                  const userId = event.target.value;
+                  if (!userId) return;
+                  setCustomLines((cur) => [...cur, { step_order: cur.length + 1, step_kind: 'approval', line_mode: 'sequential', required_count: 1, is_blocking: true, assignee_user_ids: [userId] }]);
+                  event.target.value = '';
+                }}
+              >
+                <option value="">-- 등록된 직원 콤보박스에서 결재자 선택 --</option>
+                {catalog.users
+                  .filter((user) => user.id !== auth.user?.id && !new Set((customLines ?? []).flatMap((l) => l.assignee_user_ids ?? [])).has(user.id))
+                  .map((user) => (
+                    <option key={user.id} value={user.id}>
+                      {user.name} · {user.position_name || user.job_title_name || '직급 미등록'} ({user.department_name || '소속 미등록'})
+                    </option>
+                  ))}
+              </select>
             </label>
-            {approverResults.length > 0 && (
-              <div className="gw-approver-results">
-                {approverResults.map((user) => (
-                  <button type="button" key={user.id} onClick={() => {
-                    setCustomLines((cur) => [...cur, { step_order: cur.length + 1, step_kind: 'approval', line_mode: 'sequential', required_count: 1, is_blocking: true, assignee_user_ids: [user.id] }]);
-                    setApproverSearch('');
-                  }}>
-                    <strong>{user.name}</strong>
-                    <span>{user.department_name ?? '소속 미등록'} · {user.position_name ?? '직급 미등록'}</span>
-                  </button>
-                ))}
-              </div>
-            )}
+
             <div className="gw-custom-approval-lines">
               {customLines.map((line, index) => {
                 const user = catalog.users.find((item) => item.id === line.assignee_user_ids?.[0]);
@@ -413,7 +378,7 @@ export default function ApprovalDraftPage({ isEdit = false }) {
                 );
               })}
             </div>
-            {customLines.length === 0 && <p className="gw-empty-state">상단 주요 결재자 목록이나 직원 검색창에서 결재자를 순서대로 추가해 주세요.</p>}
+            {customLines.length === 0 && <p className="gw-empty-state">위 콤보박스에서 결재자를 순서대로 선택해 주세요.</p>}
           </>
         )}
       </section>
@@ -422,19 +387,27 @@ export default function ApprovalDraftPage({ isEdit = false }) {
       <section className="gw-approval-card">
         <h2>참조·열람자</h2>
         <label className="gw-field">
-          <span>직원 조회</span>
-          <input value={referenceSearch} onChange={(event) => setReferenceSearch(event.target.value)} placeholder="이름, 부서 또는 직급 입력" />
+          <span>참조자 선택 (등록된 직원 콤보박스)</span>
+          <select
+            onChange={(event) => {
+              const userId = event.target.value;
+              if (!userId) return;
+              if (!references.some((r) => r.user_id === userId)) {
+                setReferences((cur) => [...cur, { user_id: userId, reference_type: 'reference' }]);
+              }
+              event.target.value = '';
+            }}
+          >
+            <option value="">-- 등록된 직원 콤보박스에서 참조자 선택 --</option>
+            {catalog.users
+              .filter((user) => user.id !== auth.user?.id && !references.some((r) => r.user_id === user.id))
+              .map((user) => (
+                <option key={user.id} value={user.id}>
+                  {user.name} · {user.position_name || user.job_title_name || '직급 미등록'} ({user.department_name || '소속 미등록'})
+                </option>
+              ))}
+          </select>
         </label>
-        {referenceResults.length > 0 && (
-          <div className="gw-approver-results">
-            {referenceResults.map((user) => (
-              <button type="button" key={user.id} onClick={() => { setReferences((cur) => [...cur, { user_id: user.id, reference_type: 'reference' }]); setReferenceSearch(''); }}>
-                <strong>{user.name}</strong>
-                <span>{user.department_name ?? '소속 미등록'} · {user.position_name ?? '직급 미등록'}</span>
-              </button>
-            ))}
-          </div>
-        )}
         <div className="gw-reference-chips">
           {references.map((item) => {
             const user = catalog.users.find((c) => c.id === item.user_id);
