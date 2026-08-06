@@ -25,10 +25,7 @@ export default function ApprovalDraftPage({ isEdit = false }) {
   const [approverSearch, setApproverSearch] = useState('');
   const [references, setReferences] = useState([]);
   const [referenceSearch, setReferenceSearch] = useState('');
-  const [attachmentFiles, setAttachmentFiles] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
-  const [status, setStatus] = useState('');
+  const [existingAttachments, setExistingAttachments] = useState([]);
 
   useEffect(() => {
     let active = true;
@@ -44,6 +41,7 @@ export default function ApprovalDraftPage({ isEdit = false }) {
           setTitle(documentValue.title ?? '');
           setBody(bodyToText(documentValue.revision?.body_json));
           setFormData(documentValue.revision?.form_data ?? {});
+          setExistingAttachments(documentValue.attachments ?? []);
           let loadedCustomLines = null;
           if (documentValue.lines && documentValue.lines.length > 0) {
             const revisionLines = documentValue.lines.filter((line) => line.revision_id === documentValue.current_revision_id).sort((a, b) => a.step_order - b.step_order);
@@ -111,12 +109,18 @@ export default function ApprovalDraftPage({ isEdit = false }) {
       const savedId = await approvalService.saveDraft({ documentId: isEdit ? documentId : null, templateId: selectedTemplate.id, title: title.trim(), bodyJson: textToBody(body), formData, lineSchemaOverride: customLines });
       await approvalService.setReferences(savedId, references);
       for (const file of attachmentFiles) await approvalService.uploadAttachment(savedId, file);
+      setAttachmentFiles([]);
       if (submit) {
         await approvalService.submitDocument(savedId);
         navigate('/approval/outbox');
       } else {
-        setStatus('임시 저장했습니다. 결재선도 현재 양식 기준으로 준비되었습니다.');
-        if (!isEdit) navigate(`/approval/documents/${savedId}/edit`, { replace: true });
+        setStatus('임시 저장했습니다. 결재선과 첨부파일이 안전하게 반영되었습니다.');
+        if (!isEdit) {
+          navigate(`/approval/documents/${savedId}/edit`, { replace: true });
+        } else {
+          const fresh = await approvalService.getDocument(savedId);
+          setExistingAttachments(fresh.attachments ?? []);
+        }
       }
     } catch (error) {
       setStatus(formatApprovalError(error));
@@ -139,7 +143,45 @@ export default function ApprovalDraftPage({ isEdit = false }) {
 
     <section className="gw-approval-card"><h2>참조·열람자</h2><label className="gw-field"><span>직원 조회</span><input value={referenceSearch} onChange={(event) => setReferenceSearch(event.target.value)} placeholder="이름, 부서 또는 직급 입력" /></label>{referenceResults.length > 0 && <div className="gw-approver-results">{referenceResults.map((user) => <button type="button" key={user.id} onClick={() => { setReferences((current) => [...current, { user_id: user.id, reference_type: 'reference' }]); setReferenceSearch(''); }}><strong>{user.name}</strong><span>{user.department_name ?? '소속 미등록'} · {user.position_name ?? '직급 미등록'}</span></button>)}</div>}<div className="gw-reference-chips">{references.map((item) => { const user = catalog.users.find((candidate) => candidate.id === item.user_id); return <div key={item.user_id}><strong>{user?.name ?? '사용자'}</strong><select aria-label={`${user?.name ?? '사용자'} 권한`} value={item.reference_type} onChange={(event) => setReferences((current) => current.map((candidate) => candidate.user_id === item.user_id ? { ...candidate, reference_type: event.target.value } : candidate))}><option value="reference">참조</option><option value="reader">열람</option></select><button type="button" onClick={() => setReferences((current) => current.filter((candidate) => candidate.user_id !== item.user_id))}>삭제</button></div>; })}</div></section>
 
-    <section className="gw-approval-card"><h2>첨부파일</h2><label className="gw-field"><span>파일 선택(최대 10개, 파일당 20MB)</span><input type="file" multiple accept=".pdf,.jpg,.jpeg,.png,.webp,.txt,.zip,.docx,.xlsx" onChange={(event) => setAttachmentFiles(Array.from(event.target.files ?? []).slice(0, 10))} /></label>{attachmentFiles.length > 0 && <ul className="gw-file-selection">{attachmentFiles.map((file) => <li key={`${file.name}-${file.size}`}><span>{file.name}</span><small>{formatBytes(file.size)}</small></li>)}</ul>}</section>
+    <section className="gw-approval-card">
+      <h2>첨부파일</h2>
+      {existingAttachments.length > 0 && (
+        <div className="gw-existing-attachments" style={{ marginBottom: '1rem' }}>
+          <h3>등록된 첨부파일</h3>
+          <ul className="gw-approval-attachments">
+            {existingAttachments.map((item) => (
+              <li key={item.id}>
+                <div>
+                  <strong>{item.original_name}</strong>
+                  <span>{formatBytes(item.file_size)}</span>
+                </div>
+                <div className="gw-admin-actions">
+                  <a className="gw-secondary-button" href={item.download_url} target="_blank" rel="noreferrer">다운로드</a>
+                  <button className="gw-secondary-button" type="button" onClick={async () => {
+                    await approvalService.deleteAttachment(item.id);
+                    setExistingAttachments((prev) => prev.filter((a) => a.id !== item.id));
+                  }}>삭제</button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+      <label className="gw-field">
+        <span>{existingAttachments.length > 0 ? '새 파일 추가 (최대 10개, 파일당 20MB)' : '파일 선택(최대 10개, 파일당 20MB)'}</span>
+        <input type="file" multiple accept=".pdf,.jpg,.jpeg,.png,.webp,.txt,.zip,.docx,.xlsx" onChange={(event) => setAttachmentFiles(Array.from(event.target.files ?? []).slice(0, 10))} />
+      </label>
+      {attachmentFiles.length > 0 && (
+        <ul className="gw-file-selection">
+          {attachmentFiles.map((file) => (
+            <li key={`${file.name}-${file.size}`}>
+              <span>{file.name}</span>
+              <small>{formatBytes(file.size)}</small>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
 
     {status && <p className="gw-form-status" role="status">{status}</p>}
   </article>;
