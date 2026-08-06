@@ -34,7 +34,7 @@ export default function ApprovalDocumentPage() {
     if (action === 'approve') {
       if (!credentialId) { setError('승인하려면 먼저 결재용 도장이나 서명을 등록해 주세요.'); return; }
       if (!window.confirm('이 문서를 승인하시겠습니까?')) return;
-      opinion = window.prompt('승인 의견(선택)') ?? '';
+      opinion = '';
     } else if (action === 'release_hold') {
       if (!window.confirm('보류를 해제하고 결재를 계속하시겠습니까?')) return;
     } else {
