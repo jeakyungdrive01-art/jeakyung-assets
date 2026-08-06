@@ -37,7 +37,32 @@
 .site-popup-dialog > header button { flex: 0 0 auto; width: 40px; height: 40px; border: 0; border-radius: 10px; color: #33405d; background: #eef1f7; font-size: 26px; line-height: 1; }
 .site-popup-body { overflow-y: auto; padding: 24px; }
 .site-popup-dialog > footer span { color: #687087; font-size: 14px; }
-.site-popup-dialog > footer button { min-height: 44px; margin-left: auto; border: 0; border-radius: 11px; padding: 0 18px; color: #fff; background: #2450f5; font-size: 14px; font-weight: 800; }
+.site-popup-dialog > footer button { min-height: 44px; margin-left: auto; border: 0; border-radius: 11px; padding: 0 18px; color: #fff; background: #2450f5; font-size: 14px; font-weight: 800; cursor: pointer; }
+
+.site-popup-7days-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  user-select: none;
+  color: #33405d;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.site-popup-7days-label input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: #2450f5;
+  cursor: pointer;
+}
+
+.site-popup-footer-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-left: auto;
+}
 
 .site-popup-document { color: #222a40; font-size: 15px; line-height: 1.75; overflow-wrap: anywhere; }
 .site-popup-document > :first-child { margin-top: 0; }
