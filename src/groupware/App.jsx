@@ -9,9 +9,6 @@ import PendingPage from './pages/auth/PendingPage.jsx';
 import ResetPasswordPage from './pages/auth/ResetPasswordPage.jsx';
 import SignupPage from './pages/auth/SignupPage.jsx';
 import UpdatePasswordPage from './pages/auth/UpdatePasswordPage.jsx';
-import ApprovalRoutes from './pages/internal/ApprovalRoutes.jsx';
-import AdminPage from './pages/internal/AdminPage.jsx';
-import BoardAdminPage from './pages/internal/BoardAdminPage.jsx';
 import BoardPage from './pages/internal/BoardPage.jsx';
 import BoardsPage from './pages/internal/BoardsPage.jsx';
 import CalendarPage from './pages/internal/CalendarPage.jsx';
@@ -25,8 +22,13 @@ import MembershipStatusPage from './pages/status/MembershipStatusPage.jsx';
 import AdminRoute from './routes/AdminRoute.jsx';
 import ProtectedRoute from './routes/ProtectedRoute.jsx';
 
+// 초기 대시보드 진입과 무관한 대형 라우트는 지연 로딩해 초기 번들 크기를 줄인다.
+// (vercel-react-best-practices: 2.4 Dynamic Imports for Heavy Components)
 const PostWritePage = lazy(() => import('./pages/internal/PostWritePage.jsx'));
 const PopupAdminPage = lazy(() => import('./pages/internal/PopupAdminPage.jsx'));
+const ApprovalRoutes = lazy(() => import('./pages/internal/ApprovalRoutes.jsx'));
+const AdminPage = lazy(() => import('./pages/internal/AdminPage.jsx'));
+const BoardAdminPage = lazy(() => import('./pages/internal/BoardAdminPage.jsx'));
 
 function EditorRoute() {
   return <Suspense fallback={<p className="gw-empty-state" role="status">게시글 편집기를 불러오고 있습니다.</p>}><PostWritePage /></Suspense>;
@@ -34,6 +36,18 @@ function EditorRoute() {
 
 function PopupAdminRoute() {
   return <Suspense fallback={<p className="gw-empty-state" role="status">팝업 문서 관리 화면을 불러오고 있습니다.</p>}><PopupAdminPage /></Suspense>;
+}
+
+function ApprovalRoute() {
+  return <Suspense fallback={<p className="gw-empty-state" role="status">전자결재 화면을 불러오고 있습니다.</p>}><ApprovalRoutes /></Suspense>;
+}
+
+function AdminRoutePage() {
+  return <Suspense fallback={<p className="gw-empty-state" role="status">관리자 화면을 불러오고 있습니다.</p>}><AdminPage /></Suspense>;
+}
+
+function BoardAdminRoutePage() {
+  return <Suspense fallback={<p className="gw-empty-state" role="status">게시판 관리 화면을 불러오고 있습니다.</p>}><BoardAdminPage /></Suspense>;
 }
 
 export default function App() {
@@ -65,12 +79,12 @@ export default function App() {
               <Route path="boards/:boardSlug/posts/:postId" element={<PostDetailPage />} />
               <Route path="boards/:boardSlug/posts/:postId/edit" element={<EditorRoute />} />
               <Route path="boards/:boardSlug/write" element={<EditorRoute />} />
-              <Route path="approval/*" element={<ApprovalRoutes />} />
+              <Route path="approval/*" element={<ApprovalRoute />} />
               <Route path="calendar" element={<CalendarPage />} />
               <Route path="files" element={<FilesPage />} />
               <Route element={<AdminRoute />}>
-                <Route path="admin" element={<AdminPage />} />
-                <Route path="admin/boards" element={<BoardAdminPage />} />
+                <Route path="admin" element={<AdminRoutePage />} />
+                <Route path="admin/boards" element={<BoardAdminRoutePage />} />
                 <Route path="admin/popups" element={<PopupAdminRoute />} />
               </Route>
             </Route>
