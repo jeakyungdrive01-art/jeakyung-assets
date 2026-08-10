@@ -14,7 +14,6 @@ import BoardsPage from './pages/internal/BoardsPage.jsx';
 import CalendarPage from './pages/internal/CalendarPage.jsx';
 import DashboardPage from './pages/internal/DashboardPage.jsx';
 import FilesPage from './pages/internal/FilesPage.jsx';
-import MailPage from './pages/internal/MailPage.jsx';
 import OrganizationPage from './pages/internal/OrganizationPage.jsx';
 import MyProfilePage from './pages/internal/MyProfilePage.jsx';
 import PostDetailPage from './pages/internal/PostDetailPage.jsx';
@@ -72,7 +71,6 @@ export default function App() {
               <Route path="dashboard" element={<DashboardPage />} />
               <Route path="profile" element={<MyProfilePage />} />
               <Route path="mypage" element={<Navigate to="/profile" replace />} />
-              <Route path="mail" element={<MailPage />} />
               <Route path="organization" element={<OrganizationPage />} />
               <Route path="boards" element={<BoardsPage />} />
               <Route path="boards/:boardSlug" element={<BoardPage />} />

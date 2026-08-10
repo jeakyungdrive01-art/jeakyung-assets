@@ -1,6 +1,6 @@
 export const GROUPWARE_NAVIGATION = [
   { key: 'dashboard', label: '대시보드', path: '/dashboard' },
-  { key: 'mail', label: '이메일', path: '/mail' },
+  { key: 'mail', label: '이메일', href: 'https://mail.jeakyung.com', external: true },
   { key: 'organization', label: '조직도', path: '/organization' },
   { key: 'boards', label: '게시판', path: '/boards' },
   { key: 'approval', label: '전자결재', path: '/approval' },

@@ -2744,6 +2744,9 @@ body.groupware-root a.gw-secondary-button {
 .gw-nav-count { margin-left: auto; }
 .gw-app-shell--collapsed .gw-nav-count { position: absolute; top: 4px; right: 5px; }
 .gw-notification-menu { position: relative; }
+
+.gw-nav-external-icon { margin-left: auto; color: var(--gw-muted); font-size: 13px; }
+.gw-app-shell--collapsed .gw-nav-external-icon { display: none; }
 .gw-notification-menu > button { position: relative; }
 .gw-topbar-count { position: absolute; top: -8px; right: -7px; border: 2px solid #fff; }
 

@@ -127,17 +127,34 @@ export default function AppShell() {
         <nav className="gw-sidebar-nav" id="groupware-navigation">
           {visibleNavigation.map((item, index) => (
             <div className="gw-nav-block" key={item.key}>
-              <NavLink
-                className={({ isActive }) => `gw-nav-link${isActive ? ' is-active' : ''}`}
-                ref={index === 0 ? firstMenuRef : undefined}
-                to={item.path}
-                title={collapsed ? item.label : undefined}
-                onClick={() => isMobile && closeDrawer()}
-              >
-                <NavigationIcon name={item.key} />
-                <span>{item.label}</span>
-                {item.key === 'approval' && headerState.approval_pending > 0 && <span className="gw-nav-count" aria-label={`결재 대기 ${headerState.approval_pending}건`}>{headerState.approval_pending}</span>}
-              </NavLink>
+              {item.external ? (
+                <a
+                  className="gw-nav-link"
+                  ref={index === 0 ? firstMenuRef : undefined}
+                  href={item.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title={collapsed ? item.label : undefined}
+                  aria-label={`${item.label}, 새 창`}
+                  onClick={() => isMobile && closeDrawer()}
+                >
+                  <NavigationIcon name={item.key} />
+                  <span>{item.label}</span>
+                  <span aria-hidden="true" className="gw-nav-external-icon">↗</span>
+                </a>
+              ) : (
+                <NavLink
+                  className={({ isActive }) => `gw-nav-link${isActive ? ' is-active' : ''}`}
+                  ref={index === 0 ? firstMenuRef : undefined}
+                  to={item.path}
+                  title={collapsed ? item.label : undefined}
+                  onClick={() => isMobile && closeDrawer()}
+                >
+                  <NavigationIcon name={item.key} />
+                  <span>{item.label}</span>
+                  {item.key === 'approval' && headerState.approval_pending > 0 && <span className="gw-nav-count" aria-label={`결재 대기 ${headerState.approval_pending}건`}>{headerState.approval_pending}</span>}
+                </NavLink>
+              )}
               {item.key === 'boards' && !collapsed && boards.length > 0 && (
                 <div className="gw-board-nav" aria-label="내 게시판">
                   {favoriteBoards.length > 0 && <BoardNavGroup label="즐겨찾기" boards={favoriteBoards} onNavigate={() => isMobile && closeDrawer()} />}
