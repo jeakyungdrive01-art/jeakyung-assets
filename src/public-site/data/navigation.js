@@ -1,4 +1,4 @@
-export const WORK_SYSTEM_URL = 'https://jeakyung.quv.kr';
+export const WORK_SYSTEM_URL = 'https://groupware.jeakyung.com/groupware/login';
 export const CONSULTATION_URL = 'https://pf.kakao.com/_xgrFxhn';
 
 export const navigationByPage = {
