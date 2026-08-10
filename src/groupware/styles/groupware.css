@@ -2468,7 +2468,7 @@ body.groupware-root a.gw-secondary-button {
 
 .gw-approval-page {
   display: grid;
-  gap: 22px;
+  gap: 12px;
 }
 
 .gw-approval-heading {
@@ -2534,14 +2534,17 @@ body.groupware-root a.gw-secondary-button {
 
 .gw-approval-summary > a {
   display: grid;
-  gap: 5px;
-  min-height: 142px;
+  gap: 4px;
+  min-height: 96px;
   border: 1px solid var(--gw-border);
-  border-radius: 18px;
-  padding: 20px;
+  border-radius: 14px;
+  padding: 14px 16px;
   background: linear-gradient(145deg, #fff, #f6f8ff);
   text-decoration: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
 }
+
+.gw-approval-summary > a:hover { border-color: #aebdf2; box-shadow: 0 4px 14px rgba(20, 30, 70, 0.06); }
 
 .gw-approval-summary span,
 .gw-approval-summary small { color: var(--gw-muted); font-size: 14px; }
@@ -2704,7 +2707,7 @@ body.groupware-root a.gw-secondary-button {
 .gw-approval-table-wrap { overflow-x: auto; padding: 0; }
 .gw-approval-table { width: 100%; min-width: 860px; border-collapse: collapse; }
 .gw-approval-table th,
-.gw-approval-table td { border-bottom: 1px solid var(--gw-border); padding: 15px 16px; text-align: left; vertical-align: middle; font-size: 14px; }
+.gw-approval-table td { border-bottom: 1px solid var(--gw-border); padding: 11px 14px; text-align: left; vertical-align: middle; font-size: 14px; }
 .gw-approval-table th { color: var(--gw-muted); background: #f7f8fc; font-weight: 800; }
 .gw-approval-table tr:last-child td { border-bottom: 0; }
 .gw-approval-document-link { color: var(--gw-navy-950); font-weight: 800; text-decoration: none; }
@@ -3339,8 +3342,13 @@ body.groupware-root a.gw-secondary-button {
 .gw-approval-card,
 .gw-card {
   padding: 0.85rem 1.15rem;
-  margin-bottom: 0.65rem;
   border-radius: 10px;
+}
+
+/* .gw-approval-page is a grid with its own gap; a margin-bottom here would
+   double up the spacing between stacked cards. */
+.gw-approval-page .gw-approval-card {
+  margin-bottom: 0;
 }
 
 .gw-approval-card h2 {

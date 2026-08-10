@@ -138,7 +138,7 @@ const ApprovalListPage = ({ type }) => {
     <article className="gw-approval-page" aria-labelledby="approval-list-title">
       <header className="gw-approval-heading">
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          <button type="button" className="gw-back-icon-button" onClick={() => navigate('/groupware/approval')} aria-label="전자결재 홈으로">
+          <button type="button" className="gw-back-icon-button" onClick={() => navigate('/approval')} aria-label="전자결재 홈으로">
             <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg>
           </button>
           <div>
