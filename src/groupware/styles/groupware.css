@@ -2026,6 +2026,7 @@ body.groupware-root a.gw-secondary-button {
   border-radius: 10px;
   padding: 0 16px;
   font-size: 14px;
+  box-shadow: 0 6px 14px rgba(36, 80, 245, 0.16);
 }
 
 .gw-board-header-actions {
@@ -2155,7 +2156,7 @@ body.groupware-root a.gw-secondary-button {
   background: #fff;
 }
 
-.gw-post-content p { min-height: 180px; white-space: pre-wrap; }
+.gw-post-content p { white-space: pre-wrap; }
 .gw-rich-editor {
   overflow: hidden;
   border: 1px solid var(--gw-border);
