@@ -9,6 +9,7 @@ import FAQSection from '../components/home/FAQSection.jsx';
 import GuideSection from '../components/home/GuideSection.jsx';
 import HeroSection from '../components/home/HeroSection.jsx';
 import LocationSection from '../components/home/LocationSection.jsx';
+import PartnersSection from '../components/home/PartnersSection.jsx';
 import ServicesSection from '../components/home/ServicesSection.jsx';
 import StatementSection from '../components/home/StatementSection.jsx';
 import useRevealOnScroll from '../hooks/useRevealOnScroll.js';
@@ -48,6 +49,10 @@ export default function HomePage() {
 
       <section className="audience section" id="audience" aria-labelledby="audience-title">
         <AudienceSection />
+      </section>
+
+      <section className="partners section" id="partners" aria-labelledby="partners-title">
+        <PartnersSection />
       </section>
 
       <section className="statement" aria-labelledby="statement-title">
