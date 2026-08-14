@@ -646,13 +646,13 @@ body.groupware-root a.gw-secondary-button {
 }
 
 .gw-sidebar-header {
-  min-height: 84px;
+  min-height: 56px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 10px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  padding: 16px 18px;
+  padding: 10px 14px;
 }
 
 .gw-sidebar .gw-brand-copy strong,
@@ -671,9 +671,12 @@ body.groupware-root a.gw-secondary-button {
   justify-content: center;
 }
 
+/* 접힘 상태(76px)에서는 가로로 나란히 둘 폭이 없어 세로로 쌓는다. */
 .gw-app-shell--collapsed .gw-sidebar-header {
+  flex-direction: column;
   justify-content: center;
-  padding-inline: 12px;
+  gap: 8px;
+  padding-inline: 10px;
 }
 
 .gw-sidebar-nav {
@@ -762,19 +765,28 @@ body.groupware-root a.gw-secondary-button {
   background: transparent;
 }
 
+/* 사이드바 헤더의 아이콘 토글. 평소에도 보이도록 옅은 배경을 깔고,
+   접힘 상태에서는 아이콘을 뒤집어 방향을 알려 준다. */
 .gw-collapse-button {
-  width: 100%;
-  min-height: 44px;
-  display: flex;
+  flex: 0 0 auto;
+  width: 30px;
+  height: 30px;
+  display: inline-flex;
   align-items: center;
-  gap: 12px;
-  border-radius: 10px;
-  padding: 0 12px;
-  font-size: 14px;
+  justify-content: center;
+  padding: 0;
+  border-radius: var(--gw-radius);
+  background: rgba(255, 255, 255, 0.08);
+  transition: background 150ms ease, color 150ms ease;
 }
 
 .gw-collapse-button:hover {
-  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.gw-app-shell--collapsed .gw-collapse-button svg {
+  transform: scaleX(-1);
 }
 
 .gw-drawer-close,

@@ -122,6 +122,20 @@ export default function AppShell() {
       >
         <div className="gw-sidebar-header">
           <GroupwareBrand compact={collapsed} />
+          {/* 접기 버튼은 사이드바 하단이 아니라 로고 옆(일반적인 위치)에 둔다. */}
+          <button
+            className="gw-collapse-button"
+            type="button"
+            onClick={() => setCollapsed((current) => !current)}
+            aria-pressed={collapsed}
+            aria-label={collapsed ? '사이드바 펼치기' : '사이드바 접기'}
+            title={collapsed ? '사이드바 펼치기' : '사이드바 접기'}
+          >
+            <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="4" width="18" height="16" rx="2" />
+              <path d="M9 4v16" />
+            </svg>
+          </button>
           <button className="gw-drawer-close" type="button" onClick={() => closeDrawer({ restoreFocus: true })} aria-label="메뉴 닫기">×</button>
         </div>
         <nav className="gw-sidebar-nav" id="groupware-navigation">
@@ -167,10 +181,6 @@ export default function AppShell() {
         </nav>
         <div className="gw-sidebar-footer">
           <div className="gw-sidebar-user"><ProfileAvatar profile={auth.profile} size="small" /><p><strong>{displayName}</strong><span>{auth.profile?.department_name || '소속 미등록'}</span><span>{activeRoleName}</span></p></div>
-          <button className="gw-collapse-button" type="button" onClick={() => setCollapsed((current) => !current)} aria-pressed={collapsed}>
-            <span aria-hidden="true">{collapsed ? '→' : '←'}</span>
-            <span>{collapsed ? '펼치기' : '사이드바 접기'}</span>
-          </button>
         </div>
       </aside>
 
