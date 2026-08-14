@@ -1,4 +1,3 @@
-import { ImageMagick, initializeImageMagick } from '@imagemagick/magick-wasm';
 import { createSupabaseContext } from '@supabase/server';
 
 const BUCKET = 'groupware-board-attachments';
@@ -18,12 +17,8 @@ const CORS_HEADERS = {
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 
-const wasmBytes = await Deno.readFile(
-  new URL('magick.wasm', import.meta.resolve('npm:@imagemagick/magick-wasm@0.0.41')),
-);
-await initializeImageMagick(wasmBytes);
-
 type ImageFormat = keyof typeof MIME_BY_FORMAT;
+type Dimensions = { width: number; height: number };
 
 function response(body: Record<string, unknown>, status = 200) {
   return Response.json(body, { status, headers: CORS_HEADERS });
@@ -42,12 +37,79 @@ function detectFormat(bytes: Uint8Array): ImageFormat | null {
   return null;
 }
 
-function decodeImage(bytes: Uint8Array) {
-  try {
-    return ImageMagick.read(bytes, (image) => ({ width: image.width, height: image.height }));
-  } catch {
+// Pure byte-parsing dimension readers. Avoids depending on a native/WASM image
+// library inside the edge runtime (which is flaky here - it was the actual
+// cause of every inline image upload failing with a non-2xx response).
+function readUint16BE(bytes: Uint8Array, offset: number): number {
+  return (bytes[offset] << 8) | bytes[offset + 1];
+}
+
+function readUint32BE(bytes: Uint8Array, offset: number): number {
+  return ((bytes[offset] << 24) >>> 0) + (bytes[offset + 1] << 16) + (bytes[offset + 2] << 8) + bytes[offset + 3];
+}
+
+function readUint16LE(bytes: Uint8Array, offset: number): number {
+  return bytes[offset] | (bytes[offset + 1] << 8);
+}
+
+function readPngDimensions(bytes: Uint8Array): Dimensions | null {
+  if (bytes.length < 24) return null;
+  return { width: readUint32BE(bytes, 16), height: readUint32BE(bytes, 20) };
+}
+
+function readGifDimensions(bytes: Uint8Array): Dimensions | null {
+  if (bytes.length < 10) return null;
+  return { width: readUint16LE(bytes, 6), height: readUint16LE(bytes, 8) };
+}
+
+function readJpegDimensions(bytes: Uint8Array): Dimensions | null {
+  let offset = 2;
+  while (offset < bytes.length - 8) {
+    if (bytes[offset] !== 0xff) { offset += 1; continue; }
+    const marker = bytes[offset + 1];
+    const isStandalone = marker === 0xd8 || marker === 0x01 || (marker >= 0xd0 && marker <= 0xd7);
+    if (isStandalone) { offset += 2; continue; }
+    if (marker === 0xd9) break;
+    const isSOF = marker >= 0xc0 && marker <= 0xcf && marker !== 0xc4 && marker !== 0xc8 && marker !== 0xcc;
+    if (isSOF) return { height: readUint16BE(bytes, offset + 5), width: readUint16BE(bytes, offset + 7) };
+    const segmentLength = readUint16BE(bytes, offset + 2);
+    if (segmentLength < 2) break;
+    offset += 2 + segmentLength;
+  }
+  return null;
+}
+
+function readWebpDimensions(bytes: Uint8Array): Dimensions | null {
+  if (bytes.length < 30) return null;
+  const fourCC = String.fromCharCode(bytes[12], bytes[13], bytes[14], bytes[15]);
+  if (fourCC === 'VP8X') {
+    return {
+      width: 1 + (bytes[24] | (bytes[25] << 8) | (bytes[26] << 16)),
+      height: 1 + (bytes[27] | (bytes[28] << 8) | (bytes[29] << 16)),
+    };
+  }
+  if (fourCC === 'VP8L' && bytes[20] === 0x2f) {
+    const b0 = bytes[21], b1 = bytes[22], b2 = bytes[23], b3 = bytes[24];
+    return {
+      width: 1 + (((b1 & 0x3f) << 8) | b0),
+      height: 1 + (((b3 & 0x0f) << 10) | (b2 << 2) | ((b1 & 0xc0) >> 6)),
+    };
+  }
+  if (fourCC === 'VP8 ' && bytes[23] === 0x9d && bytes[24] === 0x01 && bytes[25] === 0x2a) {
+    return { width: (bytes[26] | (bytes[27] << 8)) & 0x3fff, height: (bytes[28] | (bytes[29] << 8)) & 0x3fff };
+  }
+  return null;
+}
+
+function readDimensions(format: ImageFormat, bytes: Uint8Array): Dimensions {
+  const dimensions = format === 'png' ? readPngDimensions(bytes)
+    : format === 'gif' ? readGifDimensions(bytes)
+    : format === 'jpeg' ? readJpegDimensions(bytes)
+    : readWebpDimensions(bytes);
+  if (!dimensions || !dimensions.width || !dimensions.height) {
     throw new Error('이미지를 해석할 수 없습니다. 손상되지 않은 이미지인지 확인해 주세요.');
   }
+  return dimensions;
 }
 
 export default {
@@ -76,7 +138,7 @@ export default {
       const format = detectFormat(bytes);
       if (!format || MIME_BY_FORMAT[format] !== file.type) return response({ error: 'image_signature_mismatch' }, 415);
 
-      const { width, height } = decodeImage(bytes);
+      const { width, height } = readDimensions(format, bytes);
       if (!width || !height || width * height > MAX_PIXELS) return response({ error: 'invalid_image_dimensions' }, 422);
 
       const storagePath = `${boardId}/${userId}/inline/${postId}/${crypto.randomUUID()}.${EXTENSION_BY_FORMAT[format]}`;
