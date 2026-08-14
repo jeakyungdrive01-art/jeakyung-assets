@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 
 import { useAuth } from '../../context/AuthContext.jsx';
@@ -21,12 +22,34 @@ export default function ProfileCard() {
   const profile = auth.profile ?? {};
   const displayName = profile.display_name || profile.preferred_name || profile.full_name || profile.name || '사용자';
   const activeRoleName = auth.assignedRoles.find((role) => role.code === auth.activeRole)?.name || auth.activeRole || '미등록';
+  // 상세 항목은 기본적으로 접어 두고 필요할 때만 펼친다.
+  const [expanded, setExpanded] = useState(false);
   return (
     <section className="gw-profile-card" aria-labelledby="my-profile-card-title">
-      <div className="gw-profile-card-hero"><ProfileAvatar profile={profile} size="large" /><div><span className="gw-eyebrow">MY PROFILE</span><h2 id="my-profile-card-title">{displayName}</h2><p>{value(profile.department_name)} · {value(profile.position_name)} · {value(profile.job_title_name)}</p><span className="gw-active-role-badge">현재 {activeRoleName}</span></div><Link className="gw-secondary-button" to="/profile">내 프로필 편집</Link></div>
-      <dl className="gw-profile-facts">
-        <div><dt>사번</dt><dd>{value(profile.employee_number)}</dd></div><div><dt>입사일</dt><dd>{value(profile.hire_date)}</dd></div><div><dt>재직 기간</dt><dd>{tenure(profile.hire_date)}</dd></div><div><dt>회사 이메일</dt><dd>{value(profile.company_email)}</dd></div><div><dt>휴대전화</dt><dd>{value(profile.mobile_phone)}</dd></div><div><dt>사무실 전화</dt><dd>{value(profile.office_phone)}{profile.extension_number ? ` · 내선 ${profile.extension_number}` : ''}</dd></div><div><dt>근무지</dt><dd>{value(profile.work_location)}</dd></div><div><dt>보유 역할</dt><dd>{auth.assignedRoles.map((role) => role.name).join(', ') || '미등록'}</dd></div>
-      </dl>
+      <div className="gw-profile-card-hero">
+        <ProfileAvatar profile={profile} size="large" />
+        <div>
+          <h2 id="my-profile-card-title">{displayName}</h2>
+          <p>{value(profile.department_name)} · {value(profile.position_name)} · {value(profile.job_title_name)}<span className="gw-active-role-badge">{activeRoleName}</span></p>
+        </div>
+        <div className="gw-profile-card-actions">
+          <button
+            type="button"
+            className="gw-secondary-button"
+            aria-expanded={expanded}
+            aria-controls="my-profile-facts"
+            onClick={() => setExpanded((current) => !current)}
+          >
+            {expanded ? '접기' : '펼치기'}
+          </button>
+          <Link className="gw-secondary-button" to="/profile">편집</Link>
+        </div>
+      </div>
+      {expanded && (
+        <dl className="gw-profile-facts" id="my-profile-facts">
+          <div><dt>사번</dt><dd>{value(profile.employee_number)}</dd></div><div><dt>입사일</dt><dd>{value(profile.hire_date)}</dd></div><div><dt>재직 기간</dt><dd>{tenure(profile.hire_date)}</dd></div><div><dt>회사 이메일</dt><dd>{value(profile.company_email)}</dd></div><div><dt>휴대전화</dt><dd>{value(profile.mobile_phone)}</dd></div><div><dt>사무실 전화</dt><dd>{value(profile.office_phone)}{profile.extension_number ? ` · 내선 ${profile.extension_number}` : ''}</dd></div><div><dt>근무지</dt><dd>{value(profile.work_location)}</dd></div><div><dt>보유 역할</dt><dd>{auth.assignedRoles.map((role) => role.name).join(', ') || '미등록'}</dd></div>
+        </dl>
+      )}
     </section>
   );
 }

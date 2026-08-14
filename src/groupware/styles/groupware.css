@@ -1491,13 +1491,20 @@ body.groupware-root a.gw-secondary-button {
 
 .gw-profile-card {
   display: grid;
-  gap: 14px;
-  margin-top: 16px;
-  border: 1px solid var(--gw-border);
-  border-radius: var(--gw-radius-lg);
-  padding: 16px 18px;
-  background: var(--gw-surface);
-  box-shadow: 0 1px 2px rgba(29, 55, 145, 0.05);
+  gap: 10px;
+  margin-top: 10px;
+  border: 0;
+  border-bottom: 1px solid var(--gw-border);
+  border-radius: 0;
+  padding: 0 0 10px;
+  background: transparent;
+  box-shadow: none;
+}
+
+.gw-profile-card-actions {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 6px;
 }
 
 .gw-profile-card-hero {
@@ -1507,8 +1514,8 @@ body.groupware-root a.gw-secondary-button {
   gap: 13px;
 }
 
-.gw-profile-card-hero h2 { margin: 1px 0 0; color: var(--gw-navy-950); font-size: 19px; letter-spacing: -0.02em; }
-.gw-profile-card-hero p { margin: 2px 0 0; color: var(--gw-muted); font-size: 13px; }
+.gw-profile-card-hero h2 { margin: 0; color: var(--gw-navy-950); font-size: 17px; letter-spacing: -0.02em; }
+.gw-profile-card-hero p { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 1px 0 0; color: var(--gw-muted); font-size: 13px; }
 .gw-profile-card-hero .gw-secondary-button { display: grid; place-items: center; text-decoration: none; }
 /* 값 하나짜리 항목이라 카드 안에 또 카드를 두지 않고, 옅은 구분선만으로
    나눈다. (이중 카드가 세로 공간을 크게 낭비하던 부분) */
@@ -1799,9 +1806,9 @@ body.groupware-root a.gw-secondary-button {
 .gw-board-type-grid small { color: var(--gw-muted); font-size: 14px; line-height: 1.45; }
 
 .gw-permission-summary,
-/* 제목 위 영문/장식 라벨은 바로 아래 한글 제목과 의미가 겹쳐 숨긴다. */
-.gw-page-header .gw-eyebrow,
-.gw-approval-heading .gw-eyebrow {
+/* 영문 장식 라벨(MY PROFILE, BOARDS 등)은 바로 아래 한글 제목과 의미가
+   겹치고 세로만 차지해 전부 숨긴다. */
+.gw-eyebrow {
   display: none;
 }
 
@@ -2182,18 +2189,46 @@ body.groupware-root a.gw-secondary-button {
 .gw-post-list p { margin: 1px 0 0; color: var(--gw-muted); font-size: 12px; }
 .gw-post-list span { color: var(--gw-blue-700); font-size: 12px; font-weight: 700; }
 
+/* 제목은 남는 폭을 모두 쓰고 길면 말줄임 */
+.gw-post-list-main { min-width: 0; flex: 1 1 auto; }
+.gw-post-list-main h2 { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
 .gw-post-list-meta {
   display: flex;
   flex: 0 0 auto;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
 }
 
-.gw-post-list-meta span {
+.gw-post-list-meta span,
+.gw-post-list-meta time {
   color: var(--gw-muted);
   font-size: 12px;
   font-weight: 600;
   white-space: nowrap;
+}
+
+.gw-post-list-meta .gw-post-list-category {
+  min-width: 0;
+  max-width: 90px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--gw-blue-700);
+}
+
+.gw-post-list-meta .gw-post-list-author {
+  max-width: 110px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 모바일에서는 우측 정보가 잘리지 않도록 제목 아래로 내려 배치한다. */
+@media (max-width: 720px) {
+  .gw-post-list > article { flex-wrap: wrap; gap: 4px 10px; }
+  .gw-post-list-main { flex: 1 1 100%; }
+  .gw-post-list-meta { flex: 1 1 100%; flex-wrap: wrap; gap: 8px; }
+  .gw-post-list-meta .gw-post-list-category,
+  .gw-post-list-meta .gw-post-list-author { max-width: none; }
 }
 
 .gw-pagination {
