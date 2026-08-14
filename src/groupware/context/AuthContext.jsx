@@ -8,7 +8,7 @@ import {
   signUpMembership,
   updatePassword,
 } from '../services/authService.js';
-import { getIdentity, setMyActiveRole } from '../services/membershipService.js';
+import { getIdentity } from '../services/membershipService.js';
 
 const EMPTY_AUTH = Object.freeze({
   configured: false,
@@ -27,6 +27,8 @@ const EMPTY_AUTH = Object.freeze({
 
 const AuthContext = createContext(EMPTY_AUTH);
 
+// activeRole은 사용자가 고르는 값이 아니라 서버가 계산한 "보유 역할 중 가장 높은
+// 역할"이다. 관리자 역할을 가졌다면 로그인 즉시 관리 기능을 쓸 수 있다.
 function toPermissions(activeRole) {
   const permissions = [];
   if (activeRole === 'admin' || activeRole === 'super_admin') permissions.push('admin.access');
@@ -160,11 +162,6 @@ export function AuthProvider({ children }) {
       return result;
     },
     refresh: () => applySession(authState.session, { force: true }),
-    async switchRole(roleCode) {
-      await setMyActiveRole(roleCode);
-      identityCache.current = { key: null, identity: null, promise: null };
-      return applySession(authState.session, { force: true });
-    },
   }), [applySession, authState.session]);
 
   const contextValue = useMemo(() => ({ ...authState, ...actions }), [actions, authState]);

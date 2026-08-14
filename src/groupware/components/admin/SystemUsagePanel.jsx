@@ -1,6 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
-
-import { getAdminSystemUsage } from '../../services/adminUsageService.js';
+import { Link } from 'react-router-dom';
 
 const EMPTY_USAGE = {
   generated_at: null,
@@ -33,24 +31,11 @@ function UsageMetric({ label, value, detail, tone = '' }) {
   );
 }
 
-export default function SystemUsagePanel({ loadUsage = getAdminSystemUsage }) {
-  const [usage, setUsage] = useState(EMPTY_USAGE);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-
-  const load = useCallback(async () => {
-    setLoading(true);
-    setError('');
-    try {
-      setUsage((await loadUsage()) ?? EMPTY_USAGE);
-    } catch {
-      setError('시스템 사용량을 불러오지 못했습니다. 관리자 권한과 Supabase 마이그레이션을 확인해 주세요.');
-    } finally {
-      setLoading(false);
-    }
-  }, [loadUsage]);
-
-  useEffect(() => { load(); }, [load]);
+// 사용량은 관리자 화면이 한 번만 조회해 내려준다. 같은 RPC를 화면마다 다시
+// 부르지 않도록 이 패널은 표시만 담당한다.
+export default function SystemUsagePanel({ usage: incoming, loading = false, onReload }) {
+  const usage = incoming ?? EMPTY_USAGE;
+  const error = incoming ? '' : '시스템 사용량을 불러오지 못했습니다. 관리자 권한과 Supabase 마이그레이션을 확인해 주세요.';
 
   const { members, content, attachments, dashboards, activity, boards } = usage;
   const fileDetails = usage.file_details ?? EMPTY_USAGE.file_details;
@@ -68,7 +53,7 @@ export default function SystemUsagePanel({ loadUsage = getAdminSystemUsage }) {
         </div>
         <div className="gw-usage-refresh">
           <span>기준 {generatedAt}</span>
-          <button className="gw-secondary-button" type="button" onClick={load} disabled={loading}>
+          <button className="gw-secondary-button" type="button" onClick={onReload} disabled={loading}>
             {loading ? '집계 중…' : '새로고침'}
           </button>
         </div>
@@ -125,9 +110,9 @@ export default function SystemUsagePanel({ loadUsage = getAdminSystemUsage }) {
           <div className="gw-usage-board-heading">
             <div>
               <h3>게시판별 사용량</h3>
-              <p>표시 한도는 게시글 1건 기준이며, 변경은 아래 게시판 빌더에서 수행합니다.</p>
+              <p>표시 한도는 게시글 1건 기준이며, 변경은 게시판 관리 화면에서 수행합니다.</p>
             </div>
-            <a className="gw-secondary-button" href="#board-builder-title">게시판 한도 관리</a>
+            <Link className="gw-secondary-button" to="/admin/boards">게시판 한도 관리</Link>
           </div>
           {boards.length === 0 ? (
             <p className="gw-empty-state">등록된 게시판이 없습니다.</p>

@@ -8,14 +8,9 @@ export async function getIdentity() {
   return {
     profile: data?.profile ?? null,
     roles: data?.roles ?? [],
+    // 서버가 보유 역할 중 가장 높은 역할을 그대로 내려준다. 역할 전환은 없다.
     activeRole: data?.active_role ?? null,
   };
-}
-
-export async function setMyActiveRole(roleCode) {
-  const { data, error } = await requireSupabase().rpc('set_my_active_role', { p_role_code: roleCode });
-  if (error) throw error;
-  return data;
 }
 
 export async function listPendingMemberships() {
