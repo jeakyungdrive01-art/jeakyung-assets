@@ -90,7 +90,15 @@ export async function uploadInlineBoardImage({ boardId, postId, file, originalNa
   if (replacesAttachmentId) form.set('replaces_attachment_id', replacesAttachmentId);
   form.set('file', file, file.name);
   const { data, error } = await requireSupabase().functions.invoke('board-image-upload', { body: form });
-  if (error) throw error;
+  if (error) {
+    // supabase-js's FunctionsHttpError carries only a generic message
+    // ("Edge Function returned a non-2xx status code") - the actual
+    // { error: "reason" } body we return is on error.context (the raw
+    // Response). Without reading it, every failure looks identical
+    // regardless of cause.
+    const detail = await error.context?.json?.().catch(() => null);
+    throw new Error(detail?.error || error.message);
+  }
   if (data?.error) throw new Error(data.error);
   if (!data?.attachment?.id) throw new Error('업로드 결과에서 첨부 ID를 확인하지 못했습니다.');
   return data.attachment;
