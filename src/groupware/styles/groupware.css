@@ -2153,29 +2153,48 @@ body.groupware-root a.gw-secondary-button {
   margin-top: 16px;
 }
 
+/* 글마다 카드를 두면 테두리·모서리·간격이 겹쳐 세로를 크게 잡아먹는다.
+   목록은 하나의 표처럼 얇은 선으로만 나눈다. */
 .gw-post-list {
   display: grid;
-  gap: 6px;
+  gap: 0;
+  border-top: 1px solid var(--gw-border);
+  background: #fff;
 }
 
 .gw-post-list > article {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 20px;
-  border: 1px solid var(--gw-border);
-  border-radius: 12px;
-  padding: 13px 16px;
-  background: #fff;
-  transition: border-color 0.15s, background 0.15s;
+  gap: 14px;
+  border: 0;
+  border-bottom: 1px solid var(--gw-border);
+  border-radius: 0;
+  padding: 9px 12px;
+  background: transparent;
+  transition: background 0.15s;
 }
 
-.gw-post-list > article:hover { border-color: #c7d2fb; background: #fbfcff; }
-.gw-post-list > article.is-pinned { border-color: #aebdf2; background: #f8faff; }
-.gw-post-list h2 { margin: 4px 0; font-size: 16px; }
+.gw-post-list > article:hover { background: #f7f9fd; }
+.gw-post-list > article.is-pinned { background: #f4f7ff; box-shadow: inset 3px 0 0 var(--gw-blue-600); }
+.gw-post-list h2 { margin: 0; font-size: 15px; font-weight: 700; }
 .gw-post-list h2 a { text-decoration: none; }
-.gw-post-list p { margin: 0; color: var(--gw-muted); font-size: 13px; }
-.gw-post-list span { color: var(--gw-blue-700); font-size: 13px; font-weight: 850; }
+.gw-post-list p { margin: 1px 0 0; color: var(--gw-muted); font-size: 12px; }
+.gw-post-list span { color: var(--gw-blue-700); font-size: 12px; font-weight: 700; }
+
+.gw-post-list-meta {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.gw-post-list-meta span {
+  color: var(--gw-muted);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
 
 .gw-pagination {
   display: flex;
