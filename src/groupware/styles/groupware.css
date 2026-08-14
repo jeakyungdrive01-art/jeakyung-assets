@@ -17,16 +17,23 @@ body.groupware-root {
   --gw-success: #16734a;
   --gw-warning: #8a5700;
   --gw-danger: #b3261e;
-  --gw-sidebar-width: 272px;
-  --gw-sidebar-collapsed: 80px;
+  --gw-sidebar-width: 248px;
+  --gw-sidebar-collapsed: 76px;
+  /* 업무용 밀도 스케일: 한 화면에 더 많은 정보가 들어오도록 컨트롤 높이를
+     4px 그리드에 맞춰 통일한다. (마케팅 사이트 스케일 → 업무 도구 스케일) */
+  --gw-control-h: 36px;
+  --gw-control-h-lg: 40px;
+  --gw-control-h-sm: 32px;
+  --gw-radius: 8px;
+  --gw-radius-lg: 12px;
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
   background: var(--gw-background);
   color: var(--gw-text);
   font-family: Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  font-size: 16px;
-  line-height: 1.55;
+  font-size: 15px;
+  line-height: 1.5;
   word-break: keep-all;
 }
 
@@ -247,35 +254,42 @@ body.groupware-root button:disabled {
 
 .gw-field {
   display: grid;
-  gap: 8px;
+  gap: 5px;
 }
 
 .gw-field--full {
   grid-column: 1 / -1;
 }
 
-.gw-field label {
-  font-size: 14px;
-  font-weight: 800;
+.gw-field label,
+.gw-field > span {
+  color: var(--gw-muted);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
 }
 
-.gw-field input,
-.gw-field select,
-.gw-field textarea {
+/* `body.groupware-root input { font: inherit }` 리셋이 (0,1,2)로 더 강해서
+   여기서 font-size를 지정해도 무시된다. 같은 수준으로 맞춰 준다. */
+body.groupware-root .gw-field input,
+body.groupware-root .gw-field select,
+body.groupware-root .gw-field textarea {
   width: 100%;
-  min-height: 50px;
+  min-height: var(--gw-control-h);
   border: 1px solid var(--gw-border);
-  border-radius: 12px;
-  padding: 0 14px;
+  border-radius: var(--gw-radius);
+  padding: 0 11px;
   color: var(--gw-text);
   background: #fff;
+  font-size: 14px;
   transition: border-color 150ms ease, box-shadow 150ms ease;
 }
 
-.gw-field textarea {
-  min-height: 96px;
+body.groupware-root .gw-field textarea {
+  min-height: 76px;
   resize: vertical;
-  padding-block: 12px;
+  padding-block: 9px;
+  line-height: 1.6;
 }
 
 .gw-field input:hover,
@@ -336,24 +350,27 @@ body.groupware-root button:disabled {
   accent-color: var(--gw-blue-600);
 }
 
-.gw-primary-button {
+/* button 요소는 위의 `font: inherit` 리셋이 더 강해 font-size가 무시된다.
+   a/button 어느 쪽으로 쓰이든 같은 크기가 되도록 specificity를 맞춘다. */
+body.groupware-root .gw-primary-button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 7px;
-  min-height: 54px;
+  gap: 6px;
+  min-height: var(--gw-control-h-lg);
   border: 0;
-  border-radius: 13px;
-  padding: 0 22px;
+  border-radius: var(--gw-radius);
+  padding: 0 16px;
   color: #fff;
   background: var(--gw-blue-600);
-  box-shadow: 0 12px 24px rgba(36, 80, 245, 0.2);
-  font-weight: 850;
+  box-shadow: 0 1px 2px rgba(11, 21, 83, 0.16);
+  font-size: 14px;
+  font-weight: 800;
   line-height: 1.2;
   text-align: center;
   text-decoration: none;
   white-space: nowrap;
-  transition: background 150ms ease, transform 150ms ease;
+  transition: background 150ms ease, box-shadow 150ms ease;
 }
 
 body.groupware-root a.gw-primary-button {
@@ -362,7 +379,7 @@ body.groupware-root a.gw-primary-button {
 
 .gw-primary-button:hover {
   background: var(--gw-blue-700);
-  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(11, 21, 83, 0.2);
 }
 
 .gw-primary-button:disabled,
@@ -377,21 +394,28 @@ body.groupware-root a.gw-primary-button {
   align-items: center;
   justify-content: center;
   gap: 6px;
-  min-height: 44px;
+  min-height: var(--gw-control-h);
   border: 1px solid var(--gw-border);
-  border-radius: 11px;
-  padding: 0 16px;
-  color: var(--gw-blue-700);
+  border-radius: var(--gw-radius);
+  padding: 0 13px;
+  color: var(--gw-text);
   background: #fff;
-  font-weight: 800;
+  font-size: 14px;
+  font-weight: 700;
   line-height: 1.2;
   text-align: center;
   text-decoration: none;
   white-space: nowrap;
+  transition: border-color 150ms ease, background 150ms ease;
+}
+
+.gw-secondary-button:hover {
+  border-color: #b9c3da;
+  background: #f7f9fd;
 }
 
 body.groupware-root a.gw-secondary-button {
-  color: var(--gw-blue-700);
+  color: var(--gw-text);
 }
 
 .gw-secondary-button--danger {
@@ -663,10 +687,10 @@ body.groupware-root a.gw-secondary-button {
 .gw-nav-link {
   display: flex;
   align-items: center;
-  gap: 14px;
-  min-height: 50px;
-  border-radius: 12px;
-  padding: 0 14px;
+  gap: 11px;
+  min-height: 38px;
+  border-radius: var(--gw-radius);
+  padding: 0 11px;
   color: rgba(255, 255, 255, 0.72);
   font-size: 14px;
   font-weight: 750;
@@ -766,13 +790,13 @@ body.groupware-root a.gw-secondary-button {
   position: sticky;
   top: 0;
   z-index: 20;
-  min-height: 76px;
+  min-height: 56px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 24px;
+  gap: 16px;
   border-bottom: 1px solid var(--gw-border);
-  padding: 12px clamp(24px, 4vw, 56px);
+  padding: 8px clamp(18px, 2.4vw, 32px);
   background: rgba(255, 255, 255, 0.92);
   backdrop-filter: blur(16px);
 }
@@ -847,7 +871,7 @@ body.groupware-root a.gw-secondary-button {
 }
 
 .gw-profile-avatar--small { width: 38px; height: 38px; font-size: 14px; }
-.gw-profile-avatar--large { width: 82px; height: 82px; font-size: 26px; }
+.gw-profile-avatar--large { width: 54px; height: 54px; font-size: 19px; }
 .gw-profile-avatar--xlarge { width: 148px; height: 148px; font-size: 46px; }
 
 .gw-user-menu {
@@ -911,7 +935,7 @@ body.groupware-root a.gw-secondary-button {
 .gw-content {
   width: min(100%, 1392px);
   margin: 0 auto;
-  padding: clamp(30px, 4vw, 56px);
+  padding: clamp(18px, 2vw, 28px) clamp(18px, 2.4vw, 32px);
 }
 
 .gw-page-header {
@@ -922,7 +946,8 @@ body.groupware-root a.gw-secondary-button {
 }
 
 .gw-page-header h1 {
-  font-size: clamp(34px, 4vw, 54px);
+  font-size: clamp(21px, 2vw, 26px);
+  letter-spacing: -0.02em;
 }
 
 .gw-page-header p {
@@ -1309,9 +1334,11 @@ body.groupware-root a.gw-secondary-button {
   gap: 10px;
 }
 
+/* 버튼 폭은 라벨 길이에 맞춘다. 고정 min-width는 "목록"·"삭제" 같은 짧은
+   버튼까지 과하게 넓혀 액션 줄이 화면을 잡아먹는 원인이었다. */
 .gw-admin-actions .gw-primary-button,
 .gw-admin-actions .gw-secondary-button {
-  min-width: 128px;
+  min-width: 0;
 }
 
 .gw-organization-grid {
@@ -1452,29 +1479,31 @@ body.groupware-root a.gw-secondary-button {
 
 .gw-profile-card {
   display: grid;
-  gap: 24px;
-  margin-top: 32px;
-  border: 1px solid #cbd5f4;
-  border-radius: 24px;
-  padding: clamp(22px, 3vw, 34px);
-  background: linear-gradient(135deg, #fff 0%, #f3f6ff 100%);
-  box-shadow: 0 16px 40px rgba(29, 55, 145, 0.08);
+  gap: 14px;
+  margin-top: 16px;
+  border: 1px solid var(--gw-border);
+  border-radius: var(--gw-radius-lg);
+  padding: 16px 18px;
+  background: var(--gw-surface);
+  box-shadow: 0 1px 2px rgba(29, 55, 145, 0.05);
 }
 
 .gw-profile-card-hero {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
-  gap: 20px;
+  gap: 13px;
 }
 
-.gw-profile-card-hero h2 { margin: 4px 0 0; color: var(--gw-navy-950); font-size: clamp(25px, 3vw, 36px); }
-.gw-profile-card-hero p { margin: 5px 0 0; color: var(--gw-muted); font-size: 14px; }
+.gw-profile-card-hero h2 { margin: 1px 0 0; color: var(--gw-navy-950); font-size: 19px; letter-spacing: -0.02em; }
+.gw-profile-card-hero p { margin: 2px 0 0; color: var(--gw-muted); font-size: 13px; }
 .gw-profile-card-hero .gw-secondary-button { display: grid; place-items: center; text-decoration: none; }
-.gw-profile-facts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin: 0; }
-.gw-profile-facts > div { min-width: 0; border-radius: 13px; padding: 14px; background: rgba(255,255,255,.8); }
-.gw-profile-facts dt { color: var(--gw-muted); font-size: 14px; font-weight: 800; }
-.gw-profile-facts dd { margin: 5px 0 0; overflow-wrap: anywhere; color: var(--gw-navy-950); font-size: 14px; font-weight: 800; }
+/* 값 하나짜리 항목이라 카드 안에 또 카드를 두지 않고, 옅은 구분선만으로
+   나눈다. (이중 카드가 세로 공간을 크게 낭비하던 부분) */
+.gw-profile-facts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; margin: 0; border-top: 1px solid var(--gw-border); background: var(--gw-border); }
+.gw-profile-facts > div { min-width: 0; padding: 9px 12px; background: var(--gw-surface); }
+.gw-profile-facts dt { color: var(--gw-muted); font-size: 12px; font-weight: 700; }
+.gw-profile-facts dd { margin: 2px 0 0; overflow-wrap: anywhere; color: var(--gw-navy-950); font-size: 14px; font-weight: 700; }
 
 .gw-photo-picker { display: flex; align-items: center; gap: 16px; border: 1px dashed #bfc9e2; border-radius: 14px; padding: 14px; }
 .gw-photo-preview { width: 76px; height: 76px; display: grid; place-items: center; flex: 0 0 auto; overflow: hidden; border-radius: 18px; color: #fff; background: var(--gw-blue-600); font-weight: 900; }
@@ -2144,7 +2173,7 @@ body.groupware-root a.gw-secondary-button {
   gap: 24px;
 }
 
-.gw-post-header h1 { margin: 8px 0; font-size: clamp(30px, 4vw, 48px); }
+.gw-post-header h1 { margin: 5px 0; font-size: clamp(19px, 1.8vw, 24px); line-height: 1.3; letter-spacing: -0.02em; }
 .gw-post-header p { color: var(--gw-muted); }
 .gw-post-content,
 .gw-attachment-section,
@@ -2480,10 +2509,11 @@ body.groupware-root a.gw-secondary-button {
 }
 
 .gw-approval-heading h1 {
-  margin: 5px 0 0;
+  margin: 3px 0 0;
   color: var(--gw-navy-950);
-  font-size: clamp(30px, 4vw, 44px);
-  line-height: 1.08;
+  font-size: clamp(20px, 1.9vw, 25px);
+  line-height: 1.25;
+  letter-spacing: -0.02em;
 }
 
 .gw-approval-heading p,
@@ -3132,7 +3162,7 @@ body.groupware-root a.gw-secondary-button {
   }
 
   .gw-page-header h1 {
-    font-size: clamp(32px, 10vw, 42px);
+    font-size: clamp(20px, 5vw, 24px);
   }
 
   .gw-phase-badge {
@@ -3311,26 +3341,28 @@ body.groupware-root a.gw-secondary-button {
 }
 
 /* Icon-Only Back Button & Compact Layout Refinements */
+/* 뒤로가기는 보조 동작이므로 평소엔 테두리 없이 아이콘만 두고, 마우스를
+   올렸을 때만 배경을 보여 준다. 제목보다 시각적으로 앞서지 않게 한다. */
 .gw-back-icon-button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
+  width: 30px;
+  height: 30px;
+  margin-left: -6px;
   padding: 0;
-  border-radius: 8px;
-  border: 1px solid var(--gw-border);
-  background: var(--gw-surface);
-  color: var(--gw-text);
+  border-radius: var(--gw-radius);
+  border: 0;
+  background: transparent;
+  color: var(--gw-muted);
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: background 0.15s ease, color 0.15s ease;
   flex-shrink: 0;
 }
 
 .gw-back-icon-button:hover {
-  background: var(--gw-blue-100);
-  color: var(--gw-blue-600);
-  border-color: var(--gw-blue-600);
+  background: var(--gw-background-strong);
+  color: var(--gw-text);
 }
 
 .gw-approval-page,
