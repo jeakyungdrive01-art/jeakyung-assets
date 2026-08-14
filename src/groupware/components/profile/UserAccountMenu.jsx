@@ -48,7 +48,8 @@ export default function UserAccountMenu({ onSignOutError }) {
     <details className="gw-user-menu" ref={detailsRef}>
       <summary aria-label={`${displayName} 사용자 메뉴 열기`}>
         <ProfileAvatar profile={profile} size="small" />
-        <span className="gw-user-menu-copy"><strong>{displayName}</strong><small title={organizationSummary}>{organizationSummary}</small></span>
+        {/* 상단바는 한 줄로 끝낸다: 이름 옆에 소속·직급만, 활성 역할은 패널에서 확인. */}
+        <span className="gw-user-menu-copy"><strong>{displayName}</strong><small title={organizationSummary}>{profile.department_name || '소속 미등록'} · {profile.job_title_name || profile.position_name || '직급 미등록'}</small></span>
         <span aria-hidden="true">⌄</span>
       </summary>
       <div className="gw-user-menu-panel">
