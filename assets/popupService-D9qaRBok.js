@@ -1,0 +1,1 @@
+import{U as e,h as t,m as n}from"./groupware-CX_IkRCi.js";var r=()=>n(e),i=n=>t(e,n);export{i as n,r as t};
