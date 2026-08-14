@@ -3,6 +3,9 @@ import { useEffect, useMemo, useState } from 'react';
 import { getAttachmentViewUrl, getInlineAttachmentUrls } from '../../services/boardService.js';
 import { EMPTY_BOARD_DOCUMENT } from '../../utils/boardDocument.js';
 
+const HEX_COLOR = /^#[0-9a-f]{3,8}$/i;
+const SAFE_HREF = /^https?:\/\//i;
+
 function MarkedText({ node }) {
   let content = node.text ?? '';
   for (const mark of node.marks ?? []) {
@@ -10,20 +13,35 @@ function MarkedText({ node }) {
     else if (mark.type === 'italic') content = <em>{content}</em>;
     else if (mark.type === 'strike') content = <s>{content}</s>;
     else if (mark.type === 'code') content = <code>{content}</code>;
+    else if (mark.type === 'underline') content = <u>{content}</u>;
+    else if (mark.type === 'highlight') {
+      const color = mark.attrs?.color;
+      content = <mark style={HEX_COLOR.test(color ?? '') ? { background: color } : undefined}>{content}</mark>;
+    } else if (mark.type === 'textStyle') {
+      const color = mark.attrs?.color;
+      if (HEX_COLOR.test(color ?? '')) content = <span style={{ color }}>{content}</span>;
+    } else if (mark.type === 'link') {
+      // 저장 시 DB에서도 검사하지만, 예전 문서를 대비해 여기서도 스킴을 확인한다.
+      const href = mark.attrs?.href ?? '';
+      if (SAFE_HREF.test(href)) content = <a href={href} target="_blank" rel="noopener noreferrer">{content}</a>;
+    }
   }
   return content;
 }
+
+const ALIGNMENTS = new Set(['left', 'center', 'right', 'justify']);
+const alignStyle = (node) => (ALIGNMENTS.has(node.attrs?.textAlign) ? { textAlign: node.attrs.textAlign } : undefined);
 
 function RenderNodes({ nodes = [], urls, openImage }) {
   return nodes.map((node, index) => {
     const key = `${node.type}-${index}`;
     const children = <RenderNodes nodes={node.content} urls={urls} openImage={openImage} />;
     if (node.type === 'text') return <MarkedText key={key} node={node} />;
-    if (node.type === 'paragraph') return <p key={key}>{children}</p>;
+    if (node.type === 'paragraph') return <p key={key} style={alignStyle(node)}>{children}</p>;
     if (node.type === 'heading') {
       const level = Math.min(Math.max(Number(node.attrs?.level) || 2, 1), 3);
       const Heading = `h${level}`;
-      return <Heading key={key}>{children}</Heading>;
+      return <Heading key={key} style={alignStyle(node)}>{children}</Heading>;
     }
     if (node.type === 'bulletList') return <ul key={key}>{children}</ul>;
     if (node.type === 'orderedList') {
