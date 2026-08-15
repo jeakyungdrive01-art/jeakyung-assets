@@ -1594,8 +1594,8 @@ body.groupware-root a.gw-secondary-button {
 .gw-dashboard-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 18px;
-  margin-top: 34px;
+  gap: 0 24px;
+  margin-top: 8px;
 }
 
 .gw-profile-card {
@@ -1676,16 +1676,18 @@ body.groupware-root a.gw-secondary-button {
 .gw-profile-history time,
 .gw-profile-history span { color: var(--gw-muted); }
 
+/* 위젯마다 테두리·그림자·라운드를 두면 상자 안에 상자가 겹쳐 화면이 무거워진다.
+   구분은 항목 사이의 얇은 선 하나로만 한다. */
 .gw-dashboard-widget {
   position: relative;
   min-width: 0;
-  min-height: 210px;
   grid-column: span 2;
-  border: 1px solid var(--gw-border);
-  border-radius: 20px;
-  padding: 24px;
-  background: var(--gw-surface);
-  box-shadow: 0 12px 32px rgba(29, 38, 70, 0.05);
+  border: 0;
+  border-top: 1px solid var(--gw-border);
+  border-radius: 0;
+  padding: 10px 0 12px;
+  background: none;
+  box-shadow: none;
 }
 
 .gw-dashboard-widget--small { grid-column: span 1; }
@@ -1694,38 +1696,43 @@ body.groupware-root a.gw-secondary-button {
 
 .gw-dashboard-widget-heading {
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
-}
-
-.gw-dashboard-widget-heading span {
-  color: var(--gw-blue-600);
-  font-size: 14px;
-  font-weight: 900;
-  text-transform: uppercase;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
 }
 
 .gw-dashboard-widget h2,
 .gw-hidden-widgets h2 {
-  margin: 6px 0 0;
+  margin: 0;
+  margin-right: auto;
   color: var(--gw-navy-950);
-  font-size: 22px;
+  font-size: 16px;
 }
 
 .gw-dashboard-widget > p {
+  margin: 4px 0 0;
   color: var(--gw-muted);
   font-size: 14px;
 }
 
-.gw-widget-actions {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: 5px;
+.gw-widget-collapse {
+  flex: 0 0 auto;
+  min-height: var(--gw-control-h-sm);
+  border: 0;
+  border-radius: var(--gw-radius);
+  padding: 0 6px;
+  color: var(--gw-muted);
+  background: none;
+  font-size: 14px;
+  font-weight: 750;
+  cursor: pointer;
 }
 
-.gw-widget-actions button,
+.gw-widget-collapse:hover {
+  color: var(--gw-blue-700);
+  background: var(--gw-background);
+}
+
 .gw-hidden-widgets button,
 .gw-reactions button {
   min-height: 34px;
@@ -1750,7 +1757,6 @@ body.groupware-root a.gw-secondary-button {
 
 .gw-inline-link {
   display: inline-block;
-  margin-top: 16px;
   color: var(--gw-blue-700);
   font-size: 14px;
   font-weight: 850;
@@ -1758,21 +1764,51 @@ body.groupware-root a.gw-secondary-button {
 
 .gw-widget-posts {
   display: grid;
-  gap: 8px;
-  margin: 18px 0 0;
+  gap: 0;
+  margin: 6px 0 0;
   padding: 0;
   list-style: none;
 }
 
 .gw-widget-posts a {
   display: flex;
+  align-items: center;
   justify-content: space-between;
   gap: 14px;
-  border-top: 1px solid var(--gw-border);
-  padding-top: 8px;
+  min-height: var(--gw-control-h);
   font-size: 14px;
   text-decoration: none;
 }
+
+.gw-widget-posts li + li a { border-top: 1px solid var(--gw-border); }
+
+/* 게시판 바로가기는 한 줄에 여러 개가 들어가도록 감싼다. */
+.gw-dashboard-board-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.gw-dashboard-board-list a {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  min-height: var(--gw-control-h-sm);
+  border: 1px solid var(--gw-border);
+  border-radius: var(--gw-radius);
+  padding: 4px 10px;
+  background: var(--gw-surface);
+  font-size: 14px;
+  text-decoration: none;
+}
+
+.gw-dashboard-board-list a:hover { border-color: #9eafe9; color: var(--gw-blue-700); }
+.gw-dashboard-board-list strong { font-weight: 750; }
+.gw-dashboard-board-list span { color: var(--gw-muted); font-size: 14px; }
+.gw-widget-posts strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 700; }
 
 .gw-widget-posts span { color: var(--gw-muted); }
 
@@ -2192,22 +2228,79 @@ body.groupware-root a.gw-secondary-button {
   box-shadow: 0 6px 14px rgba(36, 80, 245, 0.16);
 }
 
+/* 게시판 머리글은 한 줄이다: 뒤로 · 제목 · (분류 · 검색 · 목록 이동 · 글쓰기). */
+.gw-board-header {
+  align-items: center;
+  gap: 10px;
+}
+
+.gw-board-header h1 {
+  margin-right: auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .gw-board-header-actions {
   display: flex;
   flex: 0 0 auto;
   flex-wrap: wrap;
-  align-items: flex-start;
+  align-items: center;
   justify-content: flex-end;
-  gap: 8px;
+  gap: 6px;
+}
+
+.gw-board-category-select select {
+  min-height: var(--gw-control-h-sm);
+  max-width: 160px;
+  border: 1px solid var(--gw-border);
+  border-radius: var(--gw-radius);
+  padding: 0 8px;
+  background: #fff;
+  font-size: 14px;
+}
+
+/* 검색은 목록을 미는 별도 줄이 아니라 제목 옆의 작은 입력 하나로 둔다. */
+.gw-board-search {
+  display: flex;
+  gap: 4px;
+}
+
+.gw-board-search input {
+  width: 150px;
+  min-height: var(--gw-control-h-sm);
+  border: 1px solid var(--gw-border);
+  border-radius: var(--gw-radius);
+  padding: 0 10px;
+  font-size: 14px;
+}
+
+.gw-board-search button {
+  min-height: var(--gw-control-h-sm);
+  border: 1px solid var(--gw-border);
+  border-radius: var(--gw-radius);
+  padding: 0 10px;
+  color: var(--gw-blue-700);
+  background: #fff;
+  font-size: 14px;
+  font-weight: 750;
+}
+
+.gw-board-header-actions .gw-secondary-button,
+.gw-board-header-actions .gw-primary-button {
+  min-height: var(--gw-control-h-sm);
+  min-width: 0;
+  padding: 0 12px;
+  font-size: 14px;
 }
 
 .gw-board-shortcut-button {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  min-height: 42px;
-  border-radius: 10px;
-  padding: 0 16px;
+  min-height: var(--gw-control-h-sm);
+  border-radius: var(--gw-radius);
+  padding: 0 12px;
   font-size: 14px;
   text-decoration: none;
 }
