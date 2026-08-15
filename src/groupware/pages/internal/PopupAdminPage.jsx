@@ -6,12 +6,17 @@ import { loadPopupAdminCatalog, managePopupDocument } from '../../services/popup
 import PopupDocumentContent from '../../../shared/popup/PopupDocumentContent.jsx';
 import { sanitizePopupHtml } from '../../../shared/popup/popupHtml.js';
 
+// 공개 사이트 타깃은 DB(popup_documents_targets 제약)와 익명 조회 권한이 이미
+// 갖춰져 있었는데 관리자 화면에서만 고를 수 없었다.
 const TARGETS = [
   ['groupware_all', '그룹웨어 전체 · 로그인 후'],
   ['groupware_dashboard', '그룹웨어 · 대시보드'],
   ['groupware_boards', '그룹웨어 · 게시판'],
   ['groupware_approval', '그룹웨어 · 전자결재'],
   ['groupware_admin', '그룹웨어 · 관리자'],
+  ['public_all', '공개 사이트 전체 · 로그인 없이'],
+  ['public_home', '공개 사이트 · 홈'],
+  ['public_privacy', '공개 사이트 · 개인정보처리방침'],
 ];
 
 function localDateTime(value = new Date()) {
@@ -21,9 +26,16 @@ function localDateTime(value = new Date()) {
   return new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
 }
 
+const SIZES = [
+  ['small', '작게 · 480px'],
+  ['medium', '보통 · 720px'],
+  ['large', '크게 · 960px'],
+  ['full', '넓게 · 화면의 90%'],
+];
+
 const createEmptyDocument = () => ({
   id: '', title: '', content_mode: 'editor', content_html: '<p>팝업 내용을 입력하세요.</p>',
-  targets: ['groupware_all'], starts_at: localDateTime(), ends_at: '', sort_order: 100,
+  targets: ['groupware_all'], size: 'medium', starts_at: localDateTime(), ends_at: '', sort_order: 100,
   is_active: true, archived: false,
 });
 
@@ -59,6 +71,7 @@ export default function PopupAdminPage() {
   const targetLabels = useMemo(() => Object.fromEntries(TARGETS), []);
   const selectDocument = (item) => setForm({
     ...item,
+    size: item.size ?? 'medium',
     starts_at: localDateTime(item.starts_at),
     ends_at: localDateTime(item.ends_at),
     archived: Boolean(item.archived_at),
@@ -100,7 +113,7 @@ export default function PopupAdminPage() {
 
     <form className="gw-admin-section gw-popup-admin-form" onSubmit={submit}>
       <div className="gw-admin-section-heading"><div><h2>{form.id ? '팝업 문서 수정' : '새 팝업 문서'}</h2><p>일반 편집기는 서식 도구를 제공하고 HTML 편집기는 안전한 HTML 태그만 저장합니다.</p></div></div>
-      <div className="gw-admin-form-grid"><label className="gw-field gw-field--full"><span>팝업 제목</span><input required maxLength="120" value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} /></label><label className="gw-field"><span>게시 시작</span><input required type="datetime-local" value={form.starts_at} onChange={(event) => setForm({ ...form, starts_at: event.target.value })} /></label><label className="gw-field"><span>게시 종료(선택)</span><input type="datetime-local" value={form.ends_at} onChange={(event) => setForm({ ...form, ends_at: event.target.value })} /></label><label className="gw-field"><span>정렬 순서</span><input type="number" value={form.sort_order} onChange={(event) => setForm({ ...form, sort_order: Number(event.target.value) })} /></label></div>
+      <div className="gw-admin-form-grid"><label className="gw-field gw-field--full"><span>팝업 제목</span><input required maxLength="120" value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} /></label><label className="gw-field"><span>게시 시작</span><input required type="datetime-local" value={form.starts_at} onChange={(event) => setForm({ ...form, starts_at: event.target.value })} /></label><label className="gw-field"><span>게시 종료(선택)</span><input type="datetime-local" value={form.ends_at} onChange={(event) => setForm({ ...form, ends_at: event.target.value })} /></label><label className="gw-field"><span>정렬 순서</span><input type="number" value={form.sort_order} onChange={(event) => setForm({ ...form, sort_order: Number(event.target.value) })} /></label><label className="gw-field"><span>팝업 크기</span><select value={form.size} onChange={(event) => setForm({ ...form, size: event.target.value })}>{SIZES.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label></div>
 
       <fieldset className="gw-builder-fieldset"><legend>노출 위치</legend><div className="gw-popup-target-grid">{TARGETS.map(([value, label]) => <label key={value}><input type="checkbox" checked={form.targets.includes(value)} onChange={(event) => toggleTarget(value, event.target.checked)} /><span>{label}</span></label>)}</div></fieldset>
 

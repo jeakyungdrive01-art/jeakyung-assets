@@ -75,7 +75,7 @@ export default function PopupLayer({ client, target }) {
 
   return (
     <div className="site-popup-layer" role="presentation">
-      <section className="site-popup-dialog" role="dialog" aria-modal="true" aria-labelledby={`popup-title-${current.id}`}>
+      <section className={`site-popup-dialog site-popup-dialog--${current.size ?? 'medium'}`} role="dialog" aria-modal="true" aria-labelledby={`popup-title-${current.id}`}>
         <header>
           <h2 id={`popup-title-${current.id}`}>{current.title}</h2>
           <button ref={closeButtonRef} type="button" onClick={closeCurrent} aria-label="팝업 닫기">×</button>
