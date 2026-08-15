@@ -1,1 +1,0 @@
-import{U as e,h as t,m as n}from"./groupware-G1VbWmo2.js";var r=()=>n(e),i=n=>t(e,n);export{i as n,r as t};
